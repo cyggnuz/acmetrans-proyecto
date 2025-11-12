@@ -1,0 +1,26 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACME TRANS - Inicio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/general.css' %}">
+</head>
+<body class="home-body">
+
+    <div class="home-container">
+        <img src="{% static 'css/img/logo-icon2.png' %}" alt="ACME TRANS" class="logo-home">
+        <h1>Bienvenido a ACME TRANS</h1>
+        <p>Seleccione una opción para continuar:</p>
+
+        <div class="home-buttons">
+            <a href="{% url 'login' %}" class="btn btn-blue">Ingresar como Empleado</a>
+            <a href="{% url 'solicitud_cliente' %}" class="btn btn-white">Soy Cliente</a>
+
+        </div>
+    </div>
+
+</body>
+</html>

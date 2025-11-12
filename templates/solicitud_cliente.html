@@ -1,0 +1,94 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Formulario de Solicitud | ACME TRANS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/general.css' %}">
+</head>
+<body class="fondo-cliente">
+
+  <div class="form-wrapper">
+    <img src="{% static 'css/img/logo-icon2.png' %}" alt="ACME TRANS" class="logo-form">
+    <h2>Formulario para Solicitud</h2>
+
+    <form method="post" class="formulario-solicitud" novalidate>
+      {% csrf_token %}
+
+      <div class="form-grid">
+        <!-- Fila 1 -->
+        <div>
+          <label for="id_nombre_cliente">Nombre de la empresa</label>
+          {{ form.nombre_cliente }}
+        </div>
+        <div>
+          <label for="id_rut_cliente">RUT de la empresa</label>
+          {{ form.rut_cliente }}
+        </div>
+
+        <!-- Fila 2 -->
+        <div>
+          <label for="id_volumen_m2">Volumen (m²)</label>
+          {{ form.volumen_m2 }}
+        </div>
+        <div>
+          <label for="id_peso_valor">Peso</label>
+          <div class="peso-grupo">
+            {{ form.peso_valor }}
+            {{ form.peso_unidad }}
+          </div>
+        </div>
+
+        <!-- Fila 3 -->
+        <div>
+          <label for="id_fecha_retiro">Fecha de retiro de la carga</label>
+          {{ form.fecha_retiro }}
+        </div>
+        <div>
+          <label for="id_fecha_entrega">Fecha de entrega de la carga</label>
+          {{ form.fecha_entrega }}
+        </div>
+
+        <!-- Fila 4 -->
+        <div>
+          <label for="id_tipo_carga">Tipo de carga</label>
+          {{ form.tipo_carga }}
+        </div>
+        <div>
+          <label for="id_direccion_retiro">Dirección de retiro</label>
+          {{ form.direccion_retiro }}
+        </div>
+
+        <!-- Fila 5 -->
+        <div>
+          <label for="id_indicaciones_especiales">Indicaciones especiales</label>
+          {{ form.indicaciones_especiales }}
+        </div>
+        <div>
+          <label for="id_direccion_entrega">Dirección de entrega</label>
+          {{ form.direccion_entrega }}
+        </div>
+      </div>
+
+      <!-- Bloque de errores de formulario -->
+      {% if form.errors %}
+        <ul class="mensajes">
+          {% for field_name, field_errors in form.errors.items %}
+            {% for error in field_errors %}
+              <li class="error">{{ field_name|capfirst }}: {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <div class="botones-form">
+        <a href="{% url 'home' %}" class="btn-rojo">Cerrar</a>
+        <button type="submit" class="btn-azul">Siguiente</button>
+      </div>
+    </form>
+  </div>
+
+</body>
+</html>

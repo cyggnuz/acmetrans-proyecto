@@ -1,0 +1,196 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Administrativo | ACME TRANS</title>
+  <link rel="stylesheet" href="{% static 'css/general.css' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body class="fondo-admin">
+
+  <div class="layout-admin">
+    <!-- SIDEBAR -->
+    <aside class="sidebar-admin">
+      <div class="logo-sidebar">
+        <img src="{% static 'css/img/logo-icon2.png' %}" alt="ACME TRANS">
+        <h2>ACME TRANS</h2>
+      </div>
+
+      <nav class="menu-sucursales">
+        <h3>Sucursales</h3>
+        <ul>
+          <li class="{% if sucursal_activa == 'Santiago' %}active{% endif %}">
+            <a href="?sucursal=Santiago">
+              <span class="dot santiago"></span> Santiago
+            </a>
+          </li>
+          <li class="{% if sucursal_activa == 'Coquimbo' %}active{% endif %}">
+            <a href="?sucursal=Coquimbo">
+              <span class="dot coquimbo"></span> Coquimbo
+            </a>
+          </li>
+          <li class="{% if sucursal_activa == 'Osorno' %}active{% endif %}">
+            <a href="?sucursal=Osorno">
+              <span class="dot osorno"></span> Osorno
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="notificaciones">
+        <h3>Notificaciones</h3>
+        <p>🚚 2 transportes en curso</p>
+        <p>📦 Última actualización: hoy</p>
+      </div>
+
+      <div class="logout-section">
+        <form method="post" action="{% url 'logout' %}" style="display:inline;">
+            {% csrf_token %}
+        <button type="submit" class="btn-logout">Cerrar Sesión</button>
+        </form>
+
+      </div>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <section class="panel-content">
+      <header class="admin-header">
+        <h1>Panel Administrativo</h1>
+      </header>
+
+      <!-- BARRA SUPERIOR DE NAVEGACIÓN -->
+      <nav class="topbar">
+        <ul>
+          <li><a href="{% url 'panel_admin' %}" class="{% if active == 'panel' %}activo{% endif %}">Boards</a></li>
+          <li><a href="{% url 'inbox' %}" class="{% if active == 'inbox' %}activo{% endif %}">Inbox</a></li>
+          <li><a href="{% url 'solicitudes' %}" class="{% if active == 'solicitudes' %}activo{% endif %}">Solicitudes</a></li>
+          <li><a href="{% url 'reportes' %}" class="{% if active == 'reportes' %}activo{% endif %}">Reportes</a></li>
+          <li><a href="{% url 'historial' %}" class="{% if active == 'historial' %}activo{% endif %}">Historial</a></li>
+
+        </ul>
+
+        <div class="user-section">
+          <div class="notificaciones">
+            <span class="icono">🔔</span>
+            <span class="badge">2</span>
+          </div>
+
+          <!-- NUEVO MENÚ DE USUARIO -->
+          <div class="usuario">
+            <input type="checkbox" id="toggle-menu" hidden>
+            <label for="toggle-menu" class="avatar-label">
+              <img src="{% static 'css/img/user.png' %}" alt="Usuario">
+            </label>
+
+            <div class="menu-usuario">
+              <a href="#">👤 Perfil</a>
+              <a href="#">⚙️ Configuración</a>
+              <a href="{% url 'logout' %}" class="logout">🚪 Cerrar sesión</a>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <!-- ✅ aquí se cierra correctamente la topbar -->
+
+      <!-- RESUMEN SUPERIOR -->
+      <section class="resumen-panel">
+        <div class="tarjeta-resumen pendiente">
+          <h4>Pendientes</h4>
+          <p>{{ resumen.pendientes }}</p>
+        </div>
+        <div class="tarjeta-resumen proceso">
+          <h4>En proceso</h4>
+          <p>{{ resumen.proceso }}</p>
+        </div>
+        <div class="tarjeta-resumen finalizada">
+          <h4>Finalizadas</h4>
+          <p>{{ resumen.finalizadas }}</p>
+        </div>
+        <div class="tarjeta-resumen rechazada">
+          <h4>Rechazadas</h4>
+          <p>{{ resumen.rechazadas }}</p>
+        </div>
+      </section>
+
+      <!-- PANEL DE SOLICITUDES -->
+      <main class="contenedor-panel">
+        <div class="filtros">
+          <a href="?estado=Pendiente" class="btn-filtro {% if filtro == 'Pendiente' %}activo{% endif %}">Pendientes</a>
+          <a href="?estado=En proceso" class="btn-filtro {% if filtro == 'En proceso' %}activo{% endif %}">En proceso</a>
+          <a href="?estado=Finalizada" class="btn-filtro {% if filtro == 'Finalizada' %}activo{% endif %}">Finalizadas</a>
+          <a href="?estado=Rechazada" class="btn-filtro {% if filtro == 'Rechazada' %}activo{% endif %}">Rechazadas</a>
+        </div>
+
+        {% if solicitudes %}
+        <div class="panel-columns">
+          <!-- Operaciones -->
+          <div class="columna">
+            <h3>Operaciones</h3>
+            {% for s in solicitudes %}
+              {% if s.tipo_carga == "General" or s.tipo_carga == "Maquinaria Pesada" %}
+              <div class="card">
+                <h4>{{ s.id_solicitud }}</h4>
+                <p><b>Cliente:</b> {{ s.nombre_cliente }}</p>
+                <p><b>Sucursal:</b> {{ s.sucursal }}</p>
+                <span class="estado {{ s.estado|lower|cut:" " }}">{{ s.estado }}</span>
+                <div class="acciones">
+                  <a href="{% url 'simular_avance' s.pk %}" class="btn-azul">Simular</a>
+                  <a href="{% url 'aprobar' s.pk %}" class="btn-verde">Aprobar</a>
+                  <a href="{% url 'rechazar' s.pk %}" class="btn-rojo">Rechazar</a>
+                </div>
+              </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+          <!-- Dirección -->
+          <div class="columna">
+            <h3>Dirección General</h3>
+            {% for s in solicitudes %}
+              {% if s.tipo_carga == "Peligrosa" or s.tipo_carga == "Granel" %}
+              <div class="card">
+                <h4>{{ s.id_solicitud }}</h4>
+                <p><b>Cliente:</b> {{ s.nombre_cliente }}</p>
+                <p><b>Sucursal:</b> {{ s.sucursal }}</p>
+                <span class="estado {{ s.estado|lower|cut:" " }}">{{ s.estado }}</span>
+                <div class="acciones">
+                  <a href="{% url 'simular_avance' s.pk %}" class="btn-azul">Simular</a>
+                  <a href="{% url 'aprobar' s.pk %}" class="btn-verde">Aprobar</a>
+                  <a href="{% url 'rechazar' s.pk %}" class="btn-rojo">Rechazar</a>
+                </div>
+              </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+          <!-- Finanzas -->
+          <div class="columna">
+            <h3>Finanzas</h3>
+            {% for s in solicitudes %}
+              {% if s.tipo_carga == "Refrigerada" %}
+              <div class="card">
+                <h4>{{ s.id_solicitud }}</h4>
+                <p><b>Cliente:</b> {{ s.nombre_cliente }}</p>
+                <p><b>Sucursal:</b> {{ s.sucursal }}</p>
+                <span class="estado {{ s.estado|lower|cut:" " }}">{{ s.estado }}</span>
+                <div class="acciones">
+                  <a href="{% url 'simular_avance' s.pk %}" class="btn-azul">Simular</a>
+                  <a href="{% url 'aprobar' s.pk %}" class="btn-verde">Aprobar</a>
+                  <a href="{% url 'rechazar' s.pk %}" class="btn-rojo">Rechazar</a>
+                </div>
+              </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+        {% else %}
+          <p style="text-align:center; margin-top:40px;">No hay solicitudes registradas.</p>
+        {% endif %}
+      </main>
+    </section>
+  </div>
+</body>
+</html>

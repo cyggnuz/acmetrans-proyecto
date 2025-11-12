@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Reportes | ACME TRANS</title>
+  <link rel="stylesheet" href="{% static 'css/general.css' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="fondo-admin">
+<div class="layout-admin">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar-admin">
+    <div class="logo-sidebar">
+      <img src="{% static 'css/img/logo-icon2.png' %}" alt="ACME TRANS">
+      <h2>ACME TRANS</h2>
+    </div>
+
+    <nav class="menu-sucursales">
+      <h3>Sucursales</h3>
+      <ul>
+        <li><a href="?sucursal=Santiago"><span class="dot santiago"></span> Santiago</a></li>
+        <li><a href="?sucursal=Coquimbo"><span class="dot coquimbo"></span> Coquimbo</a></li>
+        <li><a href="?sucursal=Osorno"><span class="dot osorno"></span> Osorno</a></li>
+      </ul>
+    </nav>
+
+    <div class="logout-section">
+      <form method="post" action="{% url 'logout' %}" style="display:inline;">
+            {% csrf_token %}
+        <button type="submit" class="btn-logout">Cerrar Sesión</button>
+        </form>
+    </div>
+  </aside>
+
+  <!-- CONTENIDO -->
+  <section class="panel-content">
+    <nav class="topbar">
+      <ul>
+        <li><a href="{% url 'panel_admin' %}">Boards</a></li>
+        <li><a href="{% url 'inbox' %}">Inbox</a></li>
+        <li><a href="{% url 'solicitudes' %}">Solicitudes</a></li>
+        <li><a href="{% url 'reportes' %}" class="activo">Reportes</a></li>
+        <li><a href="{% url 'historial' %}">Historial</a></li>
+      </ul>
+    </nav>
+
+    <header class="admin-header">
+      <h1>📈 Reportes Generales</h1>
+    </header>
+
+    <div class="contenedor-panel">
+      <h2>Resumen de Solicitudes</h2>
+      <ul class="resumen">
+        <li><b>Pendientes:</b> {{ resumen.pendientes }}</li>
+        <li><b>En Proceso:</b> {{ resumen.en_proceso }}</li>
+        <li><b>Finalizadas:</b> {{ resumen.finalizadas }}</li>
+        <li><b>Rechazadas:</b> {{ resumen.rechazadas }}</li>
+      </ul>
+      <p><b>Total:</b> {{ total_solicitudes }}</p>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

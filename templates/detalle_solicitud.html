@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Detalle de Solicitud{% endblock %}
+{% block content %}
+
+<div class="container-detalle">
+
+  <h2>📄 Detalle de la Solicitud {{ s.id_solicitud }}</h2>
+
+  <h3>Datos del Cliente</h3>
+  <ul>
+      <li><b>Cliente:</b> {{ s.nombre_cliente }}</li>
+      <li><b>RUT:</b> {{ s.rut_cliente }}</li>
+      <li><b>Tipo de carga:</b> {{ s.tipo_carga }}</li>
+      <li><b>Peso:</b> {{ s.peso_kg }} kg | <b>Volumen:</b> {{ s.volumen_m3 }} m³</li>
+  </ul>
+
+  <h3>Detalles del Transporte</h3>
+  <ul>
+      <li><b>Dirección de retiro:</b> {{ s.direccion_retiro }} ({{ s.fecha_retiro }})</li>
+      <li><b>Dirección de entrega:</b> {{ s.direccion_entrega }} ({{ s.fecha_entrega }})</li>
+      <li><b>Indicaciones:</b> {{ s.indicaciones_especiales|default:"-" }}</li>
+  </ul>
+
+  <h3>Simulación Operaciones / Finanzas</h3>
+  {% if not s.recursos_necesarios %}
+      <a class="btn" href="{% url 'simular_avance' s.pk %}">Simular datos técnicos</a>
+  {% else %}
+      <ul>
+          <li><b>Recursos:</b> {{ s.recursos_necesarios }}</li>
+          <li><b>Tiempo estimado:</b> {{ s.tiempo_viaje_estimado }}</li>
+          <li><b>Combustible:</b> ${{ s.costo_combustible_clp }}</li>
+          <li><b>Personal:</b> ${{ s.costo_personal_clp }}</li>
+          <li><b>Peajes:</b> ${{ s.costo_peajes_clp }}</li>
+          <li><b>Permisos:</b> ${{ s.permisos_especiales_clp }}</li>
+          <li><b>Riesgo:</b> {{ s.riesgo_logistico }}</li>
+      </ul>
+  {% endif %}
+
+  {% if s.estado not in 'Finalizada,Rechazada' %}
+  <div class="botones-detalle">
+      <a class="btn btn-success" href="{% url 'aprobar' s.pk %}">✅ Confirmar</a>
+      <a class="btn btn-danger" href="{% url 'rechazar' s.pk %}">❌ Rechazar</a>
+  </div>
+  {% endif %}
+
+</div>
+
+{% endblock %}
