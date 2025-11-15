@@ -4,14 +4,18 @@ from django.contrib import messages
 from django.utils import timezone
 from django.core.exceptions import PermissionDenied
 from django.utils.html import strip_tags
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+from weasyprint import HTML
 
 import random
 from .models import Solicitud
 from .forms import SolicitudForm
 from django.contrib.auth import logout
 
+
 # ============================
-# LISTAS VALIDAS PARA VALIDACIÓN
+# LISTAS VALIDAS
 # ============================
 
 SUCURSALES_VALIDAS = ["Santiago", "Coquimbo", "Osorno"]
@@ -19,24 +23,26 @@ TIPOS_CARGA_VALIDOS = ["General", "Refrigerada", "Peligrosa", "Maquinaria Pesada
 
 
 # ============================
-# SUCURSAL ACTIVA CON VALIDACIÓN
+# SUCURSAL ACTIVA (VALIDADA)
 # ============================
 
 def get_sucursal(request):
-
     suc = request.GET.get("sucursal")
 
-    # Si el usuario intenta manipularlo manualmente, se corrige automáticamente
-    if suc not in SUCURSALES_VALIDAS:
-        return request.session.get("sucursal_activa", "Santiago")
+    # Si elige "todas", no filtra nada
+    if suc == "todas":
+        request.session["sucursal_activa"] = None
+        return None
 
-    # Se guarda la sucursal en sesión
+    if suc not in SUCURSALES_VALIDAS:
+        return request.session.get("sucursal_activa", None)
+
     request.session["sucursal_activa"] = suc
     return suc
 
 
 # ============================
-# REGLAS DE ROLES
+# ROLES
 # ============================
 
 def es_director(user):
@@ -57,7 +63,7 @@ def solo_secretaria(user):
 
 
 # ============================
-# HOME & REDIRECCIONES
+# HOME
 # ============================
 
 def home_page(request):
@@ -93,15 +99,14 @@ def crear_solicitud(request):
         if form.is_valid():
             sol = form.save(commit=False)
 
-            # Validación de sucursal
+            # Validación sucursal
             suc = request.POST.get("sucursal")
             if suc not in SUCURSALES_VALIDAS:
                 suc = "Santiago"
             sol.sucursal = suc
 
-            # Sanitizar campos de texto largo
+            # Sanitizar
             sol.indicaciones_especiales = strip_tags(sol.indicaciones_especiales or "")
-
             sol.estado = 'Pendiente'
             sol.save()
 
@@ -128,17 +133,23 @@ def panel_admin(request):
     sucursal_activa = get_sucursal(request)
 
     resumen = {
-        "pendientes": Solicitud.objects.filter(sucursal=sucursal_activa, estado="Pendiente").count(),
-        "proceso": Solicitud.objects.filter(sucursal=sucursal_activa, estado="En proceso").count(),
-        "finalizadas": Solicitud.objects.filter(sucursal=sucursal_activa, estado="Finalizada").count(),
-        "rechazadas": Solicitud.objects.filter(sucursal=sucursal_activa, estado="Rechazada").count(),
+        "pendientes": Solicitud.objects.filter(sucursal=sucursal_activa, estado="Pendiente").count() if sucursal_activa else Solicitud.objects.filter(estado="Pendiente").count(),
+        "proceso": Solicitud.objects.filter(sucursal=sucursal_activa, estado="En proceso").count() if sucursal_activa else Solicitud.objects.filter(estado="En proceso").count(),
+        "finalizadas": Solicitud.objects.filter(sucursal=sucursal_activa, estado="Finalizada").count() if sucursal_activa else Solicitud.objects.filter(estado="Finalizada").count(),
+        "rechazadas": Solicitud.objects.filter(sucursal=sucursal_activa, estado="Rechazada").count() if sucursal_activa else Solicitud.objects.filter(estado="Rechazada").count(),
     }
 
-    solicitudes = Solicitud.objects.filter(sucursal=sucursal_activa).order_by("-fecha_creacion")[:5]
+    solicitudes = (
+        Solicitud.objects.filter(sucursal=sucursal_activa)
+        if sucursal_activa else Solicitud.objects.all()
+    ).order_by("-fecha_creacion")[:5]
+
+    total_solicitudes = solicitudes.count()
 
     return render(request, "panel_director.html", {
         "resumen": resumen,
         "solicitudes": solicitudes,
+        "total_solicitudes": total_solicitudes,
         "sucursal_activa": sucursal_activa,
         "active": "panel"
     })
@@ -155,8 +166,8 @@ def inbox(request):
     sucursal_activa = get_sucursal(request)
 
     notificaciones = [
-        {"id": 1, "titulo": "Transporte completado", "hora": "09:45 AM", "detalle": f"Camión llegó a {sucursal_activa}."},
-        {"id": 2, "titulo": "Nueva solicitud", "hora": "10:10 AM", "detalle": f"Solicitud recibida en {sucursal_activa}."},
+        {"id": 1, "titulo": "Transporte completado", "hora": "09:45 AM", "detalle": f"Camión llegó a {sucursal_activa or 'todas las sucursales'}."},
+        {"id": 2, "titulo": "Nueva solicitud", "hora": "10:10 AM", "detalle": "Solicitud recibida."},
         {"id": 3, "titulo": "Estado actualizado", "hora": "11:00 AM", "detalle": "Una solicitud pasó a 'En proceso'."},
     ]
 
@@ -168,7 +179,7 @@ def inbox(request):
 
 
 # ============================
-# PANEL SOLICITUDES
+# PANEL DE SOLICITUDES
 # ============================
 
 @login_required
@@ -176,7 +187,13 @@ def inbox(request):
 def panel_solicitudes(request):
 
     sucursal_activa = get_sucursal(request)
-    solicitudes = Solicitud.objects.filter(sucursal=sucursal_activa).order_by('-fecha_creacion')
+
+    if sucursal_activa:
+        solicitudes = Solicitud.objects.filter(sucursal=sucursal_activa)
+    else:
+        solicitudes = Solicitud.objects.all()
+
+    solicitudes = solicitudes.order_by('-fecha_creacion')
 
     resumen = {
         'pendientes': solicitudes.filter(estado='Pendiente').count(),
@@ -185,10 +202,14 @@ def panel_solicitudes(request):
         'rechazadas': solicitudes.filter(estado='Rechazada').count(),
     }
 
+    total_solicitudes = solicitudes.count()
+
     return render(request, "solicitudes.html", {
         "solicitudes": solicitudes,
         "resumen": resumen,
+        "total_solicitudes": total_solicitudes,
         "sucursal_activa": sucursal_activa,
+        "SUCURSALES": [(s, s) for s in SUCURSALES_VALIDAS],
         "active": "solicitudes"
     })
 
@@ -224,8 +245,8 @@ def simular_avance(request, pk):
 
     origen = s.direccion_retiro.split(',')[0] if s.direccion_retiro else "Origen"
     destino = s.direccion_entrega.split(',')[0] if s.direccion_entrega else "Destino"
-    s.tiempo_viaje_estimado = f"4 días ({origen} → {destino})"
 
+    s.tiempo_viaje_estimado = f"4 días ({origen} → {destino})"
     s.costo_combustible_clp = random.randint(1800000, 2500000)
     s.costo_personal_clp = 1200000
     s.costo_peajes_clp = random.choice([300000, 450000, 500000])
@@ -251,7 +272,7 @@ def aprobar(request, pk):
     s.save()
 
     messages.success(request, f"Solicitud {s.id_solicitud} aceptada.")
-    return redirect('panel_historial')
+    return redirect('historial')
 
 
 @login_required
@@ -266,7 +287,7 @@ def rechazar(request, pk):
     s.save()
 
     messages.warning(request, f"Solicitud {s.id_solicitud} rechazada.")
-    return redirect('panel_historial')
+    return redirect('historial')
 
 
 # ============================
@@ -279,11 +300,12 @@ def panel_historial(request):
 
     sucursal_activa = get_sucursal(request)
 
-    historial = Solicitud.objects.filter(
-        sucursal=sucursal_activa
-    ).exclude(
-        estado__in=['Pendiente', 'En proceso']
-    ).order_by('-fecha_cierre')
+    if sucursal_activa:
+        historial = Solicitud.objects.filter(sucursal=sucursal_activa)
+    else:
+        historial = Solicitud.objects.all()
+
+    historial = historial.exclude(estado__in=['Pendiente', 'En proceso']).order_by('-fecha_cierre')
 
     return render(request, "historial.html", {
         "solicitudes": historial,
@@ -302,38 +324,147 @@ def solicitud_cliente(request):
         form = SolicitudForm(request.POST)
 
         if form.is_valid():
+
             sol = form.save(commit=False)
 
-            # Validación sucursal
             suc = request.POST.get("sucursal")
             if suc not in SUCURSALES_VALIDAS:
                 suc = "Santiago"
             sol.sucursal = suc
 
-            # Validación tipo de carga
             tipo_post = request.POST.get("tipo_carga")
             if tipo_post not in TIPOS_CARGA_VALIDOS:
                 tipo_post = "General"
             sol.tipo_carga = tipo_post
 
-            # Validación fecha
             if sol.fecha_entrega < sol.fecha_retiro:
                 messages.error(request, "La fecha de entrega no puede ser anterior a la fecha de retiro.")
                 return redirect("solicitud_cliente")
 
-            # Sanitizar campo largo
             sol.indicaciones_especiales = strip_tags(sol.indicaciones_especiales or "")
-
             sol.estado = 'Pendiente'
             sol.id_solicitud = f"S{random.randint(10000,99999)}"
+
             sol.save()
 
             messages.success(request, "Solicitud enviada.")
             return render(request, 'solicitud_ok.html', {"solicitud": sol})
+
     else:
         form = SolicitudForm()
 
     return render(request, 'solicitud_cliente.html', {"form": form})
+
+
+# ============================
+# REPORTES
+# ============================
+
+@login_required
+@user_passes_test(solo_director)
+def reportes(request):
+
+    sucursal_activa = get_sucursal(request)
+
+    solicitudes = (
+        Solicitud.objects.filter(sucursal=sucursal_activa)
+        if sucursal_activa else Solicitud.objects.all()
+    )
+
+    resumen = {
+        "pendientes": solicitudes.filter(estado="Pendiente").count(),
+        "en_proceso": solicitudes.filter(estado="En proceso").count(),
+        "finalizadas": solicitudes.filter(estado="Finalizada").count(),
+        "rechazadas": solicitudes.filter(estado="Rechazada").count(),
+    }
+
+    total_solicitudes = solicitudes.count()
+
+    return render(request, "reportes.html", {
+        "resumen": resumen,
+        "total_solicitudes": total_solicitudes,
+        "active": "reportes",
+        "sucursal_activa": sucursal_activa
+    })
+
+
+@login_required
+@user_passes_test(solo_director)
+def reporte_resumen(request):
+
+    sucursal_activa = request.session.get("sucursal_activa", "Santiago")
+    solicitudes = Solicitud.objects.filter(sucursal=sucursal_activa)
+
+    resumen = {
+        "pendientes": solicitudes.filter(estado="Pendiente").count(),
+        "en_proceso": solicitudes.filter(estado="En proceso").count(),
+        "finalizadas": solicitudes.filter(estado="Finalizada").count(),
+        "rechazadas": solicitudes.filter(estado="Rechazada").count(),
+    }
+
+    total = solicitudes.count()
+
+    return render(request, "reporte_resumen.html", {
+        "solicitudes": solicitudes,
+        "resumen": resumen,
+        "total": total,
+        "sucursal": sucursal_activa
+    })
+
+
+
+
+@login_required
+@user_passes_test(solo_director)
+def exportar_reporte_pdf(request):
+
+    return HttpResponse(
+        "<h2 style='font-family:sans-serif;'>❌ Generación de PDF no disponible en Windows.<br><br>"
+        "Se requiere instalar WeasyPrint + Cairo + Pango + GObject.</h2>",
+        content_type="text/html"
+    )
+    return response
+
+
+import pdfkit
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+
+
+@login_required
+@user_passes_test(solo_director)
+def generar_resumen_pdf(request):
+
+    sucursal_activa = request.session.get("sucursal_activa", "Santiago")
+    solicitudes = Solicitud.objects.filter(sucursal=sucursal_activa)
+
+    resumen = {
+        "pendientes": solicitudes.filter(estado="Pendiente").count(),
+        "en_proceso": solicitudes.filter(estado="En proceso").count(),
+        "finalizadas": solicitudes.filter(estado="Finalizada").count(),
+        "rechazadas": solicitudes.filter(estado="Rechazada").count(),
+    }
+
+    total = solicitudes.count()
+
+    context = {
+        "solicitudes": solicitudes,
+        "resumen": resumen,
+        "total": total,
+        "sucursal": sucursal_activa,
+        "fecha": timezone.now().date(),
+        "grafico_donut": None,
+        "grafico_barras": None,
+    }
+
+    html_string = render_to_string("reporte_pdf.html", context)
+
+    pdf = HTML(string=html_string, base_url=request.build_absolute_uri()).write_pdf()
+
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="reporte_acme.pdf"'
+    return response
+
 
 
 # ============================

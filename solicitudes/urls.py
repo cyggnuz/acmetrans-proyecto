@@ -22,5 +22,10 @@ urlpatterns = [
     path('panel/reportes/', views.reportes, name='reportes'),
 
     # Historial dentro del panel
-    path('panel/historial/', views.historial, name='historial'),
+    path('panel/historial/', views.panel_historial, name='historial'),
+
+    path('reportes/resumen/', views.reporte_resumen, name='reporte_resumen'),
+    path("reportes/pdf/", views.generar_resumen_pdf, name="generar_resumen_pdf"),
+
+
 ]

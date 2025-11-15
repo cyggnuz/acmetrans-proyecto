@@ -1,0 +1,86 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte ACME TRANS</title>
+
+    <!-- Usa tu CSS general -->
+    <link rel="stylesheet" href="{% static 'css/general.css' %}">
+</head>
+
+<body class="fondo-admin">
+
+<div class="reportes-container">
+
+    <!-- Encabezado principal -->
+    <header class="admin-header" style="text-align:center;">
+        <img src="{% static 'img/logo.png' %}" style="height:60px; margin-bottom:10px;">
+        <h1 style="margin:0;">Reporte</h1>
+        <p style="margin-top:5px;">Dirección General — ACME TRANS</p>
+    </header>
+
+    <!-- Datos informativos -->
+    <section class="pdf-section">
+        <p><strong>Fecha del Reporte:</strong> {{ fecha }}</p>
+        <p><strong>Período Analizado:</strong> Último Mes</p>
+        <p><strong>Generado por:</strong> Director ACME TRANS</p>
+        <p><strong>Sucursal:</strong> {{ sucursal }}</p>
+    </section>
+
+    <!-- Resumen Ejecutivo -->
+    <section class="pdf-section">
+        <h2>Resumen Ejecutivo</h2>
+
+        <div class="card-resumen" style="margin-bottom:20px;">
+            <p>Total de Solicitudes: <strong>{{ total }}</strong></p>
+            <p>Pendientes: <strong>{{ resumen.pendientes }}</strong></p>
+            <p>En proceso: <strong>{{ resumen.en_proceso }}</strong></p>
+            <p>Finalizadas: <strong>{{ resumen.finalizadas }}</strong></p>
+            <p>Rechazadas: <strong>{{ resumen.rechazadas }}</strong></p>
+        </div>
+
+        <p>
+            Este reporte resume el comportamiento operativo de la sucursal 
+            <strong>{{ sucursal }}</strong>, destacando resultados y oportunidades 
+            de mejora para el período analizado.
+        </p>
+    </section>
+
+    <!-- Análisis -->
+    <section class="pdf-section">
+        <h2>Rendimiento General</h2>
+
+        <ul>
+            <li>Pendientes: {{ resumen.pendientes }}</li>
+            <li>En proceso: {{ resumen.en_proceso }}</li>
+            <li>Finalizadas: {{ resumen.finalizadas }}</li>
+            <li>Rechazadas: {{ resumen.rechazadas }}</li>
+        </ul>
+
+        <p>
+            Se recomienda analizar las solicitudes pendientes para mejorar la gestión 
+            del área y evitar atrasos en la cadena operativa.
+        </p>
+    </section>
+
+    <!-- Gráficos (si existen) -->
+    <section class="pdf-section">
+        <h2>Gráficos del Período</h2>
+
+        {% if grafico_donut %}
+            <p><strong>Distribución de Estados:</strong></p>
+            <img src="data:image/png;base64,{{ grafico_donut }}" style="width:300px; margin-bottom:25px;">
+        {% endif %}
+
+        {% if grafico_barras %}
+            <p><strong>Comparación por Estado:</strong></p>
+            <img src="data:image/png;base64,{{ grafico_barras }}" style="width:300px;">
+        {% endif %}
+    </section>
+
+</div>
+
+</body>
+</html>

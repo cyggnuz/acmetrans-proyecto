@@ -1,24 +1,148 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Reportes | ACME TRANS{% endblock %}
 
 {% block content %}
 
-<header class="admin-header">
-  <h1>📈 Reportes Generales</h1>
-</header>
+<!-- CHART.JS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 
-<div class="contenedor-panel">
-  <h2>Resumen de Solicitudes</h2>
 
-  <ul class="resumen">
-    <li><b>Pendientes:</b> {{ resumen.pendientes }}</li>
-    <li><b>En Proceso:</b> {{ resumen.en_proceso }}</li>
-    <li><b>Finalizadas:</b> {{ resumen.finalizadas }}</li>
-    <li><b>Rechazadas:</b> {{ resumen.rechazadas }}</li>
-  </ul>
+<div class="reportes-container">
 
-  <p><b>Total:</b> {{ total_solicitudes }}</p>
+    <!-- HEADER -->
+    <header class="admin-header">
+        <h1>📊 Reportes</h1>
+        <p class="subtitulo">Resumen general de solicitudes — 
+            <strong>Sucursal: {{ sucursal_activa }}</strong>
+        </p>
+    </header>
+
+    <!-- TARJETAS RESUMEN -->
+    <div class="resumen-grid">
+
+        <div class="card-resumen">
+            <h3>Total Solicitudes</h3>
+            <p class="valor">{{ total_solicitudes }}</p>
+        </div>
+
+        <div class="card-resumen">
+            <h3>Pendientes</h3>
+            <p class="valor">{{ resumen.pendientes }}</p>
+        </div>
+
+        <div class="card-resumen">
+            <h3>En proceso</h3>
+            <p class="valor">{{ resumen.en_proceso }}</p>
+        </div>
+
+        <div class="card-resumen">
+            <h3>Finalizadas</h3>
+            <p class="valor">{{ resumen.finalizadas }}</p>
+        </div>
+    </div>
+
+    <!-- GRÁFICOS -->
+    <div class="graficos-grid">
+
+        <div class="grafico-card">
+            <h3>Distribución de Solicitudes</h3>
+            <canvas id="chartEstados"></canvas>
+        </div>
+
+        <div class="grafico-card">
+            <h3>Comparación por Estado</h3>
+            <canvas id="chartBarras"></canvas>
+        </div>
+
+    </div>
+
 </div>
+
+<!-- JSON seguro inyectado -->
+{{ resumen|json_script:"resumen-data" }}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const dataElement = document.getElementById("resumen-data");
+    if (!dataElement) return;
+
+    const resumen = JSON.parse(dataElement.textContent);
+
+    const dataGrafico = [
+        resumen.pendientes,
+        resumen.en_proceso,
+        resumen.finalizadas,
+        resumen.rechazadas ?? 0
+    ];
+
+    const colores = [
+        '#f1c40f',
+        '#3498db',
+        '#2ecc71',
+        '#e74c3c'
+    ];
+
+    // ----------------------
+    // DONUT
+    // ----------------------
+    const ctx1 = document.getElementById("chartEstados").getContext("2d");
+    new Chart(ctx1, {
+        type: 'doughnut',
+        data: {
+            labels: ['Pendientes', 'En proceso', 'Finalizadas', 'Rechazadas'],
+            datasets: [{
+                data: dataGrafico,
+                backgroundColor: colores,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '55%',
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // ----------------------
+    // BARRAS
+    // ----------------------
+    const ctx2 = document.getElementById("chartBarras").getContext("2d");
+    new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: ['Pendientes', 'En proceso', 'Finalizadas', 'Rechazadas'],
+            datasets: [{
+                label: 'Cantidad',
+                data: dataGrafico,
+                backgroundColor: colores,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+});
+</script>
+<a href="{% url 'generar_resumen_pdf' %}" class="btn-azul" style="float:right; margin-bottom:20px;">
+    📄 Generar Resumen (PDF)
+</a>
 
 {% endblock %}
