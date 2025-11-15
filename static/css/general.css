@@ -1900,3 +1900,39 @@ body.fondo-admin {
     background-color: #0f56cf;
 }
 }
+
+/* ===========================================
+   ESTADOS UNIFICADOS 
+   ========================================== */
+
+.estado {
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    display: inline-block;
+    font-size: 14px;
+    color: #fff;
+}
+
+
+.estado.finalizada,
+.estado.aceptada,
+.estado.aceptado {
+    background-color: #2ecc71; 
+    color: #fff;
+}
+
+.estado.enproceso {
+    background-color: #3498db;
+    color: #fff;
+}
+
+.estado.pendiente {
+    background-color: #f39c12;
+    color: #fff;
+}
+
+.estado.rechazada {
+    background-color: #e74c3c; 
+    color: #fff;
+}

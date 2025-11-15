@@ -29,10 +29,15 @@
         <td>{{ s.tipo_carga }}</td>
 
         <td>
-          <span class="estado {{ s.estado_final|lower|cut:" " }}">
-            {{ s.estado_final }}
+          <span class="estado 
+              {% if s.estado_final == 'Aceptada' %}aceptado
+              {% elif s.estado_final == 'Rechazada' %}rechazada
+              {% endif %}
+          ">
+              {{ s.estado_final }}
           </span>
         </td>
+
 
         <td>{{ s.motivo_cierre }}</td>
         <td>{{ s.fecha_cierre|date:"d/m/Y" }}</td>
