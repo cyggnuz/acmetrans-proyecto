@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from datetime import datetime
 from django.utils.crypto import get_random_string
+from django.utils.html import strip_tags
+import bleach
 
 ESTADOS = [
     ('Pendiente', 'Pendiente'),
@@ -28,6 +30,35 @@ UNIDADES_PESO = [
     ('kg', 'Kilogramos (kg)'),
     ('ton', 'Toneladas (ton)'),
 ]
+
+
+#   MEDIDA DE SEGURIDAD 1:
+#   Sanitización de texto
+
+def clean_input(texto):
+    """
+    Limpia entradas de texto para evitar:
+    - HTML Injection
+    - XSS
+    - JavaScript embebido
+    - Etiquetas HTML maliciosas
+    """
+    if not texto:
+        return ""
+    
+    # strip_tags elimina cualquier etiqueta HTML
+    limpio = strip_tags(texto)
+
+    # bleach.clean elimina scripts, eventos onClick, etc.
+    limpio = bleach.clean(
+        limpio,
+        tags=[],           # No permitir ninguna etiqueta HTML
+        attributes={},     
+        strip=True         
+    )
+
+    return limpio
+
 
 class Solicitud(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
@@ -78,12 +109,23 @@ class Solicitud(models.Model):
     # Helper para normalizar a kg
     def peso_en_kg(self) -> float:
         return self.peso_valor * 1000 if self.peso_unidad == 'ton' else self.peso_valor
-    # Generar ID único antes de guardar
+
+    #   Limpiar texto antes de guardar
+
     def save(self, *args, **kwargs):
+        # Generar ID único solo si no existe
         if not self.id_solicitud:
             self.id_solicitud = f"SOL-{datetime.now().strftime('%Y%m%d')}-{get_random_string(5).upper()}"
-        super().save(*args, **kwargs)
 
-    # Helper para normalizar a kg
-    def peso_en_kg(self) -> float:
-        return self.peso_valor * 1000 if self.peso_unidad == 'ton' else self.peso_valor
+        # Sanitización de campos críticos
+        self.nombre_cliente = clean_input(self.nombre_cliente)
+        self.rut_cliente = clean_input(self.rut_cliente)
+        self.direccion_retiro = clean_input(self.direccion_retiro)
+        self.direccion_entrega = clean_input(self.direccion_entrega)
+        self.indicaciones_especiales = clean_input(self.indicaciones_especiales)
+
+        # Validación segura de sucursal (anti-manipulación)
+        if self.sucursal not in ["Santiago", "Coquimbo", "Osorno"]:
+            self.sucursal = "Santiago"
+
+        super().save(*args, **kwargs)

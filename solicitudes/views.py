@@ -2,27 +2,42 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.utils import timezone
+from django.core.exceptions import PermissionDenied
+from django.utils.html import strip_tags
+
 import random
 from .models import Solicitud
 from .forms import SolicitudForm
 from django.contrib.auth import logout
 
+# ============================
+# LISTAS VALIDAS PARA VALIDACIÓN
+# ============================
+
+SUCURSALES_VALIDAS = ["Santiago", "Coquimbo", "Osorno"]
+TIPOS_CARGA_VALIDOS = ["General", "Refrigerada", "Peligrosa", "Maquinaria Pesada", "Granel"]
+
+
+# ============================
+# SUCURSAL ACTIVA CON VALIDACIÓN
+# ============================
+
 def get_sucursal(request):
-    # Cambiada por el usuario manualmente
-    if "sucursal" in request.GET:
-        suc = request.GET.get("sucursal")
-        request.session["sucursal_activa"] = suc
-        return suc
 
-    # Guardada en la sesión
-    return request.session.get("sucursal_activa", "Santiago")
+    suc = request.GET.get("sucursal")
+
+    # Si el usuario intenta manipularlo manualmente, se corrige automáticamente
+    if suc not in SUCURSALES_VALIDAS:
+        return request.session.get("sucursal_activa", "Santiago")
+
+    # Se guarda la sucursal en sesión
+    request.session["sucursal_activa"] = suc
+    return suc
 
 
-# ======================================
+# ============================
 # REGLAS DE ROLES
-# ======================================
-def es_admin(user):
-    return user.is_superuser
+# ============================
 
 def es_director(user):
     return user.is_superuser or user.groups.filter(name='Director').exists()
@@ -30,17 +45,21 @@ def es_director(user):
 def es_secretaria(user):
     return user.is_superuser or user.groups.filter(name='Secretaria').exists()
 
+def solo_director(user):
+    if not es_director(user):
+        raise PermissionDenied
+    return True
 
-# ======================================
-# FUNCIÓN AUXILIAR: SUCURSAL ACTIVA
-# ======================================
-def get_sucursal(request):
-    return request.GET.get("sucursal", "Santiago")
+def solo_secretaria(user):
+    if not es_secretaria(user):
+        raise PermissionDenied
+    return True
 
 
-# ======================================
-# INICIO & REDIRECCIONES
-# ======================================
+# ============================
+# HOME & REDIRECCIONES
+# ============================
+
 def home_page(request):
     if request.user.is_authenticated:
         return home_redirect(request)
@@ -49,33 +68,46 @@ def home_page(request):
 
 @login_required
 def home_redirect(request):
-    if request.user.is_superuser:
+
+    if es_director(request.user):
         return redirect('panel_admin')
 
-    if request.user.groups.filter(name='Director').exists():
-        return redirect('panel_admin')
-
-    if request.user.groups.filter(name='Secretaria').exists():
+    if es_secretaria(request.user):
         return redirect('crear_solicitud')
 
     messages.warning(request, "No tiene un rol asignado.")
     return redirect('logout')
 
 
-# ======================================
+# ============================
 # SECRETARIA: CREAR SOLICITUD
-# ======================================
+# ============================
+
 @login_required
-@user_passes_test(es_secretaria)
+@user_passes_test(solo_secretaria)
 def crear_solicitud(request):
+
     if request.method == 'POST':
         form = SolicitudForm(request.POST)
+
         if form.is_valid():
             sol = form.save(commit=False)
+
+            # Validación de sucursal
+            suc = request.POST.get("sucursal")
+            if suc not in SUCURSALES_VALIDAS:
+                suc = "Santiago"
+            sol.sucursal = suc
+
+            # Sanitizar campos de texto largo
+            sol.indicaciones_especiales = strip_tags(sol.indicaciones_especiales or "")
+
             sol.estado = 'Pendiente'
             sol.save()
+
             messages.success(request, "Solicitud ingresada exitosamente.")
             return render(request, 'solicitud_ok.html', {"solicitud": sol})
+
     else:
         form = SolicitudForm()
 
@@ -85,12 +117,14 @@ def crear_solicitud(request):
     })
 
 
-# ======================================
-# PANEL ADMINISTRATIVO
-# ======================================
+# ============================
+# PANEL DIRECTOR
+# ============================
+
 @login_required
-@user_passes_test(es_director)
+@user_passes_test(solo_director)
 def panel_admin(request):
+
     sucursal_activa = get_sucursal(request)
 
     resumen = {
@@ -105,18 +139,19 @@ def panel_admin(request):
     return render(request, "panel_director.html", {
         "resumen": resumen,
         "solicitudes": solicitudes,
-        "filtro": "Pendiente",
         "sucursal_activa": sucursal_activa,
         "active": "panel"
     })
 
 
-# ======================================
+# ============================
 # INBOX
-# ======================================
+# ============================
+
 @login_required
-@user_passes_test(es_director)
+@user_passes_test(solo_director)
 def inbox(request):
+
     sucursal_activa = get_sucursal(request)
 
     notificaciones = [
@@ -132,14 +167,15 @@ def inbox(request):
     })
 
 
-# ======================================
-# PANEL DE SOLICITUDES
-# ======================================
-@login_required
-@user_passes_test(es_director)
-def panel_solicitudes(request):
-    sucursal_activa = get_sucursal(request)
+# ============================
+# PANEL SOLICITUDES
+# ============================
 
+@login_required
+@user_passes_test(solo_director)
+def panel_solicitudes(request):
+
+    sucursal_activa = get_sucursal(request)
     solicitudes = Solicitud.objects.filter(sucursal=sucursal_activa).order_by('-fecha_creacion')
 
     resumen = {
@@ -157,25 +193,30 @@ def panel_solicitudes(request):
     })
 
 
-# ======================================
-# DETALLE DE SOLICITUD
-# ======================================
+# ============================
+# DETALLE
+# ============================
+
 @login_required
-@user_passes_test(es_director)
+@user_passes_test(solo_director)
 def detalle_solicitud(request, pk):
+
     sol = get_object_or_404(Solicitud, pk=pk)
+
     return render(request, 'detalle_solicitud.html', {
         "s": sol,
         "active": "solicitudes"
     })
 
 
-# ======================================
-# ACCIONES: SIMULAR, APROBAR, RECHAZAR
-# ======================================
+# ============================
+# SIMULAR / APROBAR / RECHAZAR
+# ============================
+
 @login_required
-@user_passes_test(es_director)
+@user_passes_test(solo_director)
 def simular_avance(request, pk):
+
     s = get_object_or_404(Solicitud, pk=pk)
     peso_kg = s.peso_en_kg()
 
@@ -199,8 +240,9 @@ def simular_avance(request, pk):
 
 
 @login_required
-@user_passes_test(es_director)
+@user_passes_test(solo_director)
 def aprobar(request, pk):
+
     s = get_object_or_404(Solicitud, pk=pk)
     s.estado = 'Finalizada'
     s.estado_final = 'Aceptada'
@@ -213,8 +255,9 @@ def aprobar(request, pk):
 
 
 @login_required
-@user_passes_test(es_director)
+@user_passes_test(solo_director)
 def rechazar(request, pk):
+
     s = get_object_or_404(Solicitud, pk=pk)
     s.estado = 'Rechazada'
     s.estado_final = 'Rechazada'
@@ -226,12 +269,14 @@ def rechazar(request, pk):
     return redirect('panel_historial')
 
 
-# ======================================
-# HISTORIAL FILTRADO POR SUCURSAL
-# ======================================
+# ============================
+# HISTORIAL
+# ============================
+
 @login_required
-@user_passes_test(es_director)
+@user_passes_test(solo_director)
 def panel_historial(request):
+
     sucursal_activa = get_sucursal(request)
 
     historial = Solicitud.objects.filter(
@@ -247,18 +292,42 @@ def panel_historial(request):
     })
 
 
-# ======================================
+# ============================
 # FORMULARIO PÚBLICO
-# ======================================
+# ============================
+
 def solicitud_cliente(request):
+
     if request.method == 'POST':
         form = SolicitudForm(request.POST)
+
         if form.is_valid():
             sol = form.save(commit=False)
+
+            # Validación sucursal
+            suc = request.POST.get("sucursal")
+            if suc not in SUCURSALES_VALIDAS:
+                suc = "Santiago"
+            sol.sucursal = suc
+
+            # Validación tipo de carga
+            tipo_post = request.POST.get("tipo_carga")
+            if tipo_post not in TIPOS_CARGA_VALIDOS:
+                tipo_post = "General"
+            sol.tipo_carga = tipo_post
+
+            # Validación fecha
+            if sol.fecha_entrega < sol.fecha_retiro:
+                messages.error(request, "La fecha de entrega no puede ser anterior a la fecha de retiro.")
+                return redirect("solicitud_cliente")
+
+            # Sanitizar campo largo
+            sol.indicaciones_especiales = strip_tags(sol.indicaciones_especiales or "")
+
             sol.estado = 'Pendiente'
-            sol.sucursal = request.POST.get("sucursal")
             sol.id_solicitud = f"S{random.randint(10000,99999)}"
             sol.save()
+
             messages.success(request, "Solicitud enviada.")
             return render(request, 'solicitud_ok.html', {"solicitud": sol})
     else:
@@ -267,50 +336,10 @@ def solicitud_cliente(request):
     return render(request, 'solicitud_cliente.html', {"form": form})
 
 
-# ======================================
+# ============================
 # LOGOUT
-# ======================================
+# ============================
+
 def logout_view(request):
     logout(request)
     return redirect('login')
-
-
-@login_required
-@user_passes_test(es_director)
-def reportes(request):
-    sucursal_activa = get_sucursal(request)
-
-    solicitudes = Solicitud.objects.filter(sucursal=sucursal_activa)
-
-    resumen = {
-        "pendientes": solicitudes.filter(estado="Pendiente").count(),
-        "en_proceso": solicitudes.filter(estado="En proceso").count(),
-        "finalizadas": solicitudes.filter(estado="Finalizada").count(),
-        "rechazadas": solicitudes.filter(estado="Rechazada").count(),
-    }
-
-    total_solicitudes = solicitudes.count()
-
-    return render(request, "reportes.html", {
-        "resumen": resumen,
-        "total_solicitudes": total_solicitudes,
-        "active": "reportes",
-        "sucursal_activa": sucursal_activa
-    })
-
-@login_required
-@user_passes_test(es_director)
-def historial(request):
-    sucursal_activa = get_sucursal(request)
-
-    cerradas = Solicitud.objects.filter(
-        sucursal=sucursal_activa
-    ).exclude(
-        estado__in=['Pendiente', 'En proceso']
-    ).order_by('-fecha_cierre', '-fecha_creacion')
-
-    return render(request, 'historial.html', {
-        "solicitudes": cerradas,
-        "active": "historial",
-        "sucursal_activa": sucursal_activa,
-    })
