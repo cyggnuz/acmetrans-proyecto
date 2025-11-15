@@ -6,19 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}ACME TRANS{% endblock %}</title>
 
-  <!-- Tipografía y estilos globales -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="{% static 'css/general.css' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 
 <body class="fondo-admin">
 
-{% if not request.path.startswith:'/cliente/' and not request.path == '/login/' %}
-
 <div class="layout-admin">
 
-  <!-- SIDEBAR IZQUIERDA -->
+  <!-- SIDEBAR -->
   <aside class="sidebar-admin">
     <div class="logo-sidebar">
       <img src="{% static 'css/img/logo-icon2.png' %}" alt="ACME TRANS">
@@ -26,7 +22,7 @@
     </div>
 
     <nav class="menu-sucursales">
-      <h3>SUCURSALES</h3>
+      <h3>Sucursales</h3>
       <ul>
         <li><a href="?sucursal=Santiago"><span class="dot santiago"></span> Santiago</a></li>
         <li><a href="?sucursal=Coquimbo"><span class="dot coquimbo"></span> Coquimbo</a></li>
@@ -44,43 +40,26 @@
 
   <!-- CONTENIDO PRINCIPAL -->
   <section class="panel-content">
+
     <!-- TOPBAR -->
     <nav class="topbar">
       <ul>
-        <li><a href="{% url 'panel_director' %}" class="{% if active == 'boards' %}activo{% endif %}">Boards</a></li>
+        <li><a href="{% url 'panel_admin' %}" class="{% if active == 'boards' %}activo{% endif %}">Boards</a></li>
         <li><a href="{% url 'inbox' %}" class="{% if active == 'inbox' %}activo{% endif %}">Inbox</a></li>
         <li><a href="{% url 'solicitudes' %}" class="{% if active == 'solicitudes' %}activo{% endif %}">Solicitudes</a></li>
         <li><a href="{% url 'reportes' %}" class="{% if active == 'reportes' %}activo{% endif %}">Reportes</a></li>
         <li><a href="{% url 'historial' %}" class="{% if active == 'historial' %}activo{% endif %}">Historial</a></li>
       </ul>
-
-      <div class="user-section">
-        <div class="notificaciones">
-          <span class="icono">🔔</span>
-          <span class="badge">2</span>
-        </div>
-        <div class="usuario">
-          <img src="{% static 'css/img/user.png' %}" alt="Usuario">
-        </div>
-      </div>
     </nav>
 
     <!-- CONTENIDO VARIABLE -->
     <main>
-      {% if messages %}
-      <ul class="mensajes">
-        {% for message in messages %}
-        <li class="{{ message.tags }}">{{ message }}</li>
-        {% endfor %}
-      </ul>
-      {% endif %}
-
-      {% block content %}{% endblock %}
+      {% block content %}
+      {% endblock %}
     </main>
 
   </section>
 </div>
-{% endif %}
 
 </body>
 </html>

@@ -1,88 +1,18 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inbox | ACME TRANS</title>
-  <link rel="stylesheet" href="{% static 'css/general.css' %}">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-</head>
-<body class="fondo-admin">
+{% extends "base.html" %}
+{% block title %}Inbox | ACME TRANS{% endblock %}
 
-<div class="layout-admin">
-  <!-- Sidebar -->
-  <aside class="sidebar-admin">
-    <div class="logo-sidebar">
-      <img src="{% static 'css/img/logo-icon2.png' %}" alt="ACME TRANS">
-      <h2>ACME TRANS</h2>
-    </div>
+{% block content %}
+<header class="admin-header">
+  <h1>📨 Bandeja de Notificaciones</h1>
+</header>
 
-    <nav class="menu-sucursales">
-      <h3>Sucursales</h3>
-      <ul>
-        <li><a href="?sucursal=Santiago"><span class="dot santiago"></span> Santiago</a></li>
-        <li><a href="?sucursal=Coquimbo"><span class="dot coquimbo"></span> Coquimbo</a></li>
-        <li><a href="?sucursal=Osorno"><span class="dot osorno"></span> Osorno</a></li>
-      </ul>
-    </nav>
-
-    <div class="logout-section">
-      <form method="post" action="{% url 'logout' %}" style="display:inline;">
-            {% csrf_token %}
-        <button type="submit" class="btn-logout">Cerrar Sesión</button>
-        </form>
-    </div>
-  </aside>
-
-  <!-- Contenido principal -->
-  <section class="panel-content">
-    <header class="admin-header">
-      <h1>📨 Bandeja de Notificaciones</h1>
-    </header>
-
-    <!-- Topbar -->
-    <nav class="topbar">
-      <ul>
-        <li><a href="{% url 'panel_admin' %}" class="{% if active == 'boards' %}activo{% endif %}">Boards</a></li>
-        <li><a href="{% url 'inbox' %}" class="{% if active == 'inbox' %}activo{% endif %}">Inbox</a></li>
-        <li><a href="#">Solicitudes</a></li>
-        <li><a href="#">Reportes</a></li>
-        <li><a href="#">Historial</a></li>
-      </ul>
-
-      <div class="user-section">
-        <div class="notificaciones">
-          <span class="icono">🔔</span>
-          <span class="badge">3</span>
-        </div>
-        <div class="usuario">
-          <input type="checkbox" id="toggle-menu" hidden>
-          <label for="toggle-menu" class="avatar-label">
-            <img src="{% static 'css/img/user.png' %}" alt="Usuario">
-          </label>
-          <div class="menu-usuario">
-            <a href="#">👤 Perfil</a>
-            <a href="#">⚙️ Configuración</a>
-            <a href="{% url 'logout' %}" class="logout">🚪 Cerrar sesión</a>
-          </div>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Bandeja -->
-    <div class="bandeja-notificaciones">
-      {% for n in notificaciones %}
-      <div class="noti-card">
-        <h3>{{ n.titulo }}</h3>
-        <p class="detalle">{{ n.detalle }}</p>
-        <span class="hora">{{ n.hora }}</span>
-      </div>
-      {% endfor %}
-    </div>
-
-  </section>
+<div class="bandeja-notificaciones">
+  {% for n in notificaciones %}
+  <div class="noti-card">
+    <h3>{{ n.titulo }}</h3>
+    <p class="detalle">{{ n.detalle }}</p>
+    <span class="hora">{{ n.hora }}</span>
+  </div>
+  {% endfor %}
 </div>
-
-</body>
-</html>
+{% endblock %}

@@ -1,85 +1,50 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Historial | ACME TRANS</title>
-  <link rel="stylesheet" href="{% static 'css/general.css' %}">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-</head>
-<body class="fondo-admin">
-<div class="layout-admin">
+{% extends "base.html" %}
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar-admin">
-    <div class="logo-sidebar">
-      <img src="{% static 'css/img/logo-icon2.png' %}" alt="ACME TRANS">
-      <h2>ACME TRANS</h2>
-    </div>
+{% block title %}Historial | ACME TRANS{% endblock %}
 
-    <nav class="menu-sucursales">
-      <h3>Sucursales</h3>
-      <ul>
-        <li><a href="?sucursal=Santiago"><span class="dot santiago"></span> Santiago</a></li>
-        <li><a href="?sucursal=Coquimbo"><span class="dot coquimbo"></span> Coquimbo</a></li>
-        <li><a href="?sucursal=Osorno"><span class="dot osorno"></span> Osorno</a></li>
-      </ul>
-    </nav>
+{% block content %}
 
-    <div class="logout-section">
-      <form method="post" action="{% url 'logout' %}" style="display:inline;">
-            {% csrf_token %}
-        <button type="submit" class="btn-logout">Cerrar Sesión</button>
-        </form>
-    </div>
-  </aside>
+<header class="admin-header">
+  <h1>🕓 Historial de Solicitudes</h1>
+</header>
 
-  <!-- CONTENIDO -->
-  <section class="panel-content">
-    <nav class="topbar">
-      <ul>
-        <li><a href="{% url 'panel_admin' %}">Boards</a></li>
-        <li><a href="{% url 'inbox' %}">Inbox</a></li>
-        <li><a href="{% url 'solicitudes' %}">Solicitudes</a></li>
-        <li><a href="{% url 'reportes' %}">Reportes</a></li>
-        <li><a href="{% url 'historial' %}" class="activo">Historial</a></li>
-      </ul>
-    </nav>
+<div class="contenedor-panel">
+  <table class="tabla-solicitudes">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Cliente</th>
+        <th>Tipo de Carga</th>
+        <th>Estado Final</th>
+        <th>Motivo</th>
+        <th>Fecha Cierre</th>
+      </tr>
+    </thead>
 
-    <header class="admin-header">
-      <h1>🕓 Historial de Solicitudes</h1>
-    </header>
+    <tbody>
+      {% for s in solicitudes %}
+      <tr>
+        <td>{{ s.id_solicitud }}</td>
+        <td>{{ s.nombre_cliente }}</td>
+        <td>{{ s.tipo_carga }}</td>
 
-    <div class="contenedor-panel">
-      <table class="tabla-solicitudes">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Cliente</th>
-            <th>Tipo de Carga</th>
-            <th>Estado Final</th>
-            <th>Motivo</th>
-            <th>Fecha Cierre</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for s in solicitudes %}
-          <tr>
-            <td>{{ s.id_solicitud }}</td>
-            <td>{{ s.cliente }}</td>
-            <td>{{ s.tipo_carga }}</td>
-            <td><span class="estado {{ s.estado_final|lower }}">{{ s.estado_final }}</span></td>
-            <td>{{ s.motivo_cierre }}</td>
-            <td>{{ s.fecha_cierre|date:"d/m/Y" }}</td>
-          </tr>
-          {% empty %}
-          <tr><td colspan="6" class="text-center">No hay solicitudes cerradas todavía.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </section>
+        <td>
+          <span class="estado {{ s.estado_final|lower|cut:" " }}">
+            {{ s.estado_final }}
+          </span>
+        </td>
 
+        <td>{{ s.motivo_cierre }}</td>
+        <td>{{ s.fecha_cierre|date:"d/m/Y" }}</td>
+      </tr>
+
+      {% empty %}
+      <tr>
+        <td colspan="6" class="text-center">No hay solicitudes cerradas todavía.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
-</body>
-</html>
+
+{% endblock %}

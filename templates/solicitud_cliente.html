@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/general.css' %}">
 </head>
+
 <body class="fondo-cliente">
 
   <div class="form-wrapper">
@@ -18,6 +19,7 @@
       {% csrf_token %}
 
       <div class="form-grid">
+
         <!-- Fila 1 -->
         <div>
           <label for="id_nombre_cliente">Nombre de la empresa</label>
@@ -28,11 +30,24 @@
           {{ form.rut_cliente }}
         </div>
 
+        <!-- Fila SUCURSAL  -->
+        <div>
+          <label for="sucursal">Sucursal</label>
+          <select name="sucursal" id="sucursal" required>
+              <option value="">Seleccione una sucursal</option>
+              <option value="Santiago">Santiago</option>
+              <option value="Coquimbo">Coquimbo</option>
+              <option value="Osorno">Osorno</option>
+          </select>
+        </div>
+
         <!-- Fila 2 -->
         <div>
           <label for="id_volumen_m2">Volumen (m²)</label>
           {{ form.volumen_m2 }}
         </div>
+
+        <!-- Fila 3 -->
         <div>
           <label for="id_peso_valor">Peso</label>
           <div class="peso-grupo">
@@ -41,7 +56,7 @@
           </div>
         </div>
 
-        <!-- Fila 3 -->
+        <!-- Fila 4 -->
         <div>
           <label for="id_fecha_retiro">Fecha de retiro de la carga</label>
           {{ form.fecha_retiro }}
@@ -51,7 +66,7 @@
           {{ form.fecha_entrega }}
         </div>
 
-        <!-- Fila 4 -->
+        <!-- Fila 5 -->
         <div>
           <label for="id_tipo_carga">Tipo de carga</label>
           {{ form.tipo_carga }}
@@ -61,7 +76,7 @@
           {{ form.direccion_retiro }}
         </div>
 
-        <!-- Fila 5 -->
+        <!-- Fila 6 -->
         <div>
           <label for="id_indicaciones_especiales">Indicaciones especiales</label>
           {{ form.indicaciones_especiales }}
@@ -70,9 +85,10 @@
           <label for="id_direccion_entrega">Dirección de entrega</label>
           {{ form.direccion_entrega }}
         </div>
+
       </div>
 
-      <!-- Bloque de errores de formulario -->
+      <!-- Bloque de errores -->
       {% if form.errors %}
         <ul class="mensajes">
           {% for field_name, field_errors in form.errors.items %}
@@ -87,6 +103,7 @@
         <a href="{% url 'home' %}" class="btn-rojo">Cerrar</a>
         <button type="submit" class="btn-azul">Siguiente</button>
       </div>
+
     </form>
   </div>
 

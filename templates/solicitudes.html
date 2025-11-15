@@ -1,108 +1,70 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Solicitudes | ACME TRANS</title>
-  <link rel="stylesheet" href="{% static 'css/general.css' %}">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-</head>
-<body class="fondo-admin">
+{% extends "base.html" %}
 
-<div class="layout-admin">
-  <!-- Sidebar -->
-  <aside class="sidebar-admin">
-    <div class="logo-sidebar">
-      <img src="{% static 'css/img/logo-icon2.png' %}" alt="ACME TRANS">
-      <h2>ACME TRANS</h2>
-    </div>
+{% block title %}Solicitudes | ACME TRANS{% endblock %}
 
-    <nav class="menu-sucursales">
-      <h3>Sucursales</h3>
-      <ul>
-        <li><a href="?sucursal=Santiago"><span class="dot santiago"></span> Santiago</a></li>
-        <li><a href="?sucursal=Coquimbo"><span class="dot coquimbo"></span> Coquimbo</a></li>
-        <li><a href="?sucursal=Osorno"><span class="dot osorno"></span> Osorno</a></li>
-      </ul>
-    </nav>
+{% block content %}
 
-    <div class="logout-section">
-      <form method="post" action="{% url 'logout' %}" style="display:inline;">
-            {% csrf_token %}
-        <button type="submit" class="btn-logout">Cerrar Sesión</button>
-        </form>
-    </div>
-  </aside>
+<header class="admin-header">
+  <h1>📋 Solicitudes</h1>
+</header>
 
-  <!-- Contenido principal -->
-  <section class="panel-content">
-    <header class="admin-header">
-      <h1>📋 Solicitudes</h1>
-    </header>
-
-    <!-- Topbar -->
-    <nav class="topbar">
-      <ul>
-        <li><a href="{% url 'panel_admin' %}" class="{% if active == 'boards' %}activo{% endif %}">Boards</a></li>
-        <li><a href="{% url 'inbox' %}" class="{% if active == 'inbox' %}activo{% endif %}">Inbox</a></li>
-        <li><a href="{% url 'solicitudes' %}" class="{% if active == 'solicitudes' %}activo{% endif %}">Solicitudes</a></li>
-        <li><a href="#">Reportes</a></li>
-        <li><a href="#">Historial</a></li>
-      </ul>
-
-      <div class="user-section">
-        <div class="notificaciones">
-          <span class="icono">🔔</span>
-          <span class="badge">3</span>
-        </div>
-        <div class="usuario">
-          <input type="checkbox" id="toggle-menu" hidden>
-          <label for="toggle-menu" class="avatar-label">
-            <img src="{% static 'css/img/user.png' %}" alt="Usuario">
-          </label>
-          <div class="menu-usuario">
-            <a href="#">👤 Perfil</a>
-            <a href="#">⚙️ Configuración</a>
-            <a href="{% url 'logout' %}" class="logout">🚪 Cerrar sesión</a>
-          </div>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Tabla de solicitudes -->
-    <div class="contenedor-panel">
-      <table class="tabla-solicitudes">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Cliente</th>
-            <th>Sucursal</th>
-            <th>Tipo de Carga</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for s in solicitudes %}
-          <tr>
-            <td>{{ s.id }}</td>
-            <td>{{ s.cliente }}</td>
-            <td>{{ s.sucursal }}</td>
-            <td>{{ s.tipo_carga }}</td>
-            <td><span class="estado {{ s.estado|lower|cut:" " }}">{{ s.estado }}</span></td>
-            <td class="acciones">
-              <a href="#" class="btn-azul">Simular</a>
-              <a href="#" class="btn-verde">Aprobar</a>
-              <a href="#" class="btn-rojo">Rechazar</a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </section>
+<!-- ==============================
+     FILTRO POR SUCURSAL
+============================== -->
+<div class="filtros-sucursal">
+  <form method="get">
+    <label><strong>Sucursal:</strong></label>
+    <select name="sucursal" onchange="this.form.submit()">
+      {% for cod, nom in SUCURSALES %}
+        <option value="{{ cod }}" {% if sucursal_activa == cod %}selected{% endif %}>
+          {{ nom }}
+        </option>
+      {% endfor %}
+    </select>
+  </form>
 </div>
 
-</body>
-</html>
+<!-- ==============================
+     TABLA DE SOLICITUDES
+============================== -->
+<div class="contenedor-panel">
+  <table class="tabla-solicitudes">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Cliente</th>
+        <th>Sucursal</th>
+        <th>Tipo de Carga</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for s in solicitudes %}
+      <tr>
+        <td>{{ s.id_solicitud }}</td>
+        <td>{{ s.nombre_cliente }}</td>
+        <td>{{ s.sucursal }}</td>
+        <td>{{ s.tipo_carga }}</td>
+
+        <td>
+          <span class="estado {{ s.estado|lower|cut:" " }}">{{ s.estado }}</span>
+        </td>
+
+        <td class="acciones">
+          <a href="{% url 'simular_avance' s.id %}" class="btn-azul">Simular</a>
+          <a href="{% url 'aprobar' s.id %}" class="btn-verde">Aprobar</a>
+          <a href="{% url 'rechazar' s.id %}" class="btn-rojo">Rechazar</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" class="no-data">No hay solicitudes registradas.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

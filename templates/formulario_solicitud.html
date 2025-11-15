@@ -19,18 +19,76 @@
         <form method="post" novalidate>
             {% csrf_token %}
             <div class="form-grid">
-                <div class="form-field">{{ form.nombre_cliente.label_tag }} {{ form.nombre_cliente }}</div>
-                <div class="form-field">{{ form.rut_cliente.label_tag }} {{ form.rut_cliente }}</div>
-                <div class="form-field">{{ form.volumen_m3.label_tag }} {{ form.volumen_m3 }}</div>
-                <div class="form-field">{{ form.peso_kg.label_tag }} {{ form.peso_kg }}</div>
-                <div class="form-field">{{ form.fecha_entrega.label_tag }} {{ form.fecha_entrega }}</div>
-                <div class="form-field">{{ form.tipo_carga.label_tag }} {{ form.tipo_carga }}</div>
-                <div class="form-field">{{ form.indicaciones_especiales.label_tag }} {{ form.indicaciones_especiales }}</div>
-                <div class="form-field">{{ form.direccion_retiro.label_tag }} {{ form.direccion_retiro }}</div>
+
+                <div class="form-field">
+                    {{ form.nombre_cliente.label_tag }} 
+                    {{ form.nombre_cliente }}
+                </div>
+
+                <div class="form-field">
+                    {{ form.rut_cliente.label_tag }} 
+                    {{ form.rut_cliente }}
+                </div>
+
+                <div class="form-field">
+                    <label for="sucursal">Sucursal</label>
+                    <select name="sucursal" id="sucursal" required>
+                        <option value="">Seleccione una sucursal</option>
+                        <option value="Santiago">Santiago</option>
+                        <option value="Coquimbo">Coquimbo</option>
+                        <option value="Osorno">Osorno</option>
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    {{ form.volumen_m2.label_tag }} 
+                    {{ form.volumen_m2 }}
+                </div>
+
+                <div class="form-field">
+                    {{ form.peso_valor.label_tag }} 
+                    {{ form.peso_valor }}
+                </div>
+
+                <div class="form-field">
+                    {{ form.peso_unidad.label_tag }} 
+                    {{ form.peso_unidad }}
+                </div>
+
+                <div class="form-field">
+                    {{ form.fecha_retiro.label_tag }} 
+                    {{ form.fecha_retiro }}
+                </div>
+
+                <div class="form-field">
+                    {{ form.fecha_entrega.label_tag }} 
+                    {{ form.fecha_entrega }}
+                </div>
+
+                <div class="form-field">
+                    {{ form.tipo_carga.label_tag }} 
+                    {{ form.tipo_carga }}
+                </div>
+
+                <div class="form-field">
+                    {{ form.indicaciones_especiales.label_tag }} 
+                    {{ form.indicaciones_especiales }}
+                </div>
+
+                <div class="form-field">
+                    {{ form.direccion_retiro.label_tag }} 
+                    {{ form.direccion_retiro }}
+                </div>
+
+                <div class="form-field">
+                    {{ form.direccion_entrega.label_tag }} 
+                    {{ form.direccion_entrega }}
+                </div>
+
             </div>
 
             <div class="form-buttons">
-                <a href="{% url 'home_redirect' %}" class="btn btn-red">Cerrar</a>
+                <a href="{% url 'home' %}" class="btn btn-red">Cerrar</a>
                 <button type="submit" class="btn btn-blue">Siguiente</button>
             </div>
         </form>

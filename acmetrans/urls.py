@@ -34,7 +34,8 @@ urlpatterns = [
     path('', views.home_page, name='home'),
 
     # Panel del director / administrador
-    path('panel/', views.panel_director, name='panel_director'),
+    path('panel/', views.panel_admin, name='panel_admin'),
+
 
     # URLs de la app solicitudes
     path('', include('solicitudes.urls')),
