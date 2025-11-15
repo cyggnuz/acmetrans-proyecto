@@ -1,14 +1,16 @@
-{% extends "base_cliente.html" %}
-
-{% block title %}Solicitud enviada | ACME TRANS{% endblock %}
+{% extends "base.html" %}
+{% block title %}Solicitud enviada{% endblock %}
 
 {% block content %}
-<div class="confirmacion-cliente">
-    <div class="card-confirmacion">
-        <h2>✅ Solicitud ingresada exitosamente</h2>
-        <p>Su solicitud fue enviada correctamente y está en proceso de validación.</p>
-        <p>Dentro de las próximas horas se confirmará su estado.</p>
-        <a href="{% url 'home' %}" class="btn-principal">Ir al inicio</a>
+
+<div class="ok-container">
+    <h2>✔ Solicitud enviada correctamente</h2>
+    <p>Tu solicitud fue registrada y será revisada por nuestro equipo.</p>
+
+    <div style="margin-top:25px;">
+        <a href="{% url 'home' %}" class="btn-azul">⬅ Volver al Inicio</a>
+        <a href="{% url 'solicitud_cliente' %}" class="btn-gris">➕ Enviar otra solicitud</a>
     </div>
 </div>
+
 {% endblock %}

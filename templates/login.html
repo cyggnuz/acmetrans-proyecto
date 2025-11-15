@@ -9,8 +9,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="login-body">
+
+    <!-- Botón Volver -->
+    <a href="{% url 'home' %}" class="btn-volver-login">
+        ⬅ Volver al Inicio
+    </a>
+
     <div class="login-container">
         <div class="login-card">
+
             <div class="logo">
                 <img src="{% static 'css/img/logo-icon2.png' %}" alt="ACME TRANS">
             </div>
@@ -19,29 +26,30 @@
             <p>Por favor ingrese credenciales</p>
 
             <form method="post" action="{% url 'login' %}">
-    {% csrf_token %}
-    <div class="input-group">
-        <label for="id_username">Usuario o Email</label>
-        <input type="text" name="username" id="id_username" required>
-    </div>
+                {% csrf_token %}
+                <div class="input-group">
+                    <label for="id_username">Usuario o Email</label>
+                    <input type="text" name="username" id="id_username" required>
+                </div>
 
-    <div class="input-group">
-        <label for="id_password">Contraseña</label>
-        <input type="password" name="password" id="id_password" required>
-    </div>
+                <div class="input-group">
+                    <label for="id_password">Contraseña</label>
+                    <input type="password" name="password" id="id_password" required>
+                </div>
 
-    {% if form.errors %}
-        <p style="color:red;">Usuario o contraseña incorrectos.</p>
-    {% endif %}
+                {% if form.errors %}
+                    <p style="color:red;">Usuario o contraseña incorrectos.</p>
+                {% endif %}
 
-    <button type="submit" class="btn-login">Acceder</button>
-</form>
-
+                <button type="submit" class="btn-login">Acceder</button>
+            </form>
 
             <p class="no-account">
                 ¿No tienes cuenta? <span>Contáctese con el administrador</span>
             </p>
+
         </div>
     </div>
+
 </body>
 </html>

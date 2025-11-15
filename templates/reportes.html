@@ -58,6 +58,12 @@
         </div>
 
     </div>
+    <div class="pdf-container">
+    <a href="{% url 'generar_resumen_pdf' %}" class="btn-pdf">
+        📄 Generar Resumen (PDF)
+    </a>
+</div>
+
 
 </div>
 
@@ -141,8 +147,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 </script>
-<a href="{% url 'generar_resumen_pdf' %}" class="btn-azul" style="float:right; margin-bottom:20px;">
-    📄 Generar Resumen (PDF)
-</a>
+
 
 {% endblock %}

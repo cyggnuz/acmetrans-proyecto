@@ -711,22 +711,48 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ==== BOTÓN CERRAR ==== */
+.btn-logout-panel {
+    display: inline-block;       
+    padding: 10px 18px;
+    background: #e74c3c;
+    color: white !important;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: 0.2s ease;
+    width: auto;                
+    white-space: nowrap;         
+    text-align: center;
+    margin: 20px auto;         
+}
+.btn-logout-panel:hover {
+    background: #c0392b;
+}
+
 .logout-section {
-  text-align: center;
-  margin-top: 25px;
+    text-align: center; 
 }
+
 .btn-logout {
-  background: #dc3545;
-  color: white;
-  padding: 10px 15px;
-  border-radius: 8px;
-  text-decoration: none;
-  font-weight: 500;
-  display: block;
+    display: inline-block;     
+    padding: 10px 22px;
+    background-color: #e74c3c;
+    color: white !important;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    width: auto;                
+    margin: 15px auto;
+    text-align: center;
+    white-space: nowrap;       
+    transition: 0.2s ease-in-out;
 }
+
 .btn-logout:hover {
-  opacity: 0.9;
+    background-color: #c0392b;
 }
+
 
 /* ==== PANEL DERECHO ==== */
 .panel-content {
@@ -1836,4 +1862,41 @@ body.fondo-admin {
     border-radius: 16px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     margin-bottom: 30px;
+}
+
+
+.btn-volver-login {
+    display: inline-block;
+    margin: 20px;
+    text-decoration: none;
+    color: #4a5cff;
+    font-weight: 600;
+    transition: 0.2s ease;
+}
+
+.btn-volver-login:hover {
+    color: #2936d1;
+}
+
+.pdf-container {
+    text-align: right;
+    margin: 25px 40px;  
+
+.btn-pdf {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #1E6CFC;
+    color: white !important;
+    padding: 10px 22px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(30,108,252,0.25);
+    transition: 0.2s;
+}
+
+.btn-pdf:hover {
+    background-color: #0f56cf;
+}
 }
