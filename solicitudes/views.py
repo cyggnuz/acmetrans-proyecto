@@ -142,7 +142,7 @@ def panel_admin(request):
     solicitudes = (
         Solicitud.objects.filter(sucursal=sucursal_activa)
         if sucursal_activa else Solicitud.objects.all()
-    ).order_by("-fecha_creacion")[:5]
+    ).order_by("-fecha_creacion")    # ← CORREGIDO (eliminado [:5])
 
     total_solicitudes = solicitudes.count()
 
@@ -315,7 +315,7 @@ def panel_historial(request):
 
 
 # ============================
-# FORMULARIO PÚBLICO
+# FORMULARIO PÚBLICo
 # ============================
 
 def solicitud_cliente(request):
@@ -413,7 +413,6 @@ def reporte_resumen(request):
 
 
 
-
 @login_required
 @user_passes_test(solo_director)
 def exportar_reporte_pdf(request):
@@ -465,6 +464,19 @@ def generar_resumen_pdf(request):
     response['Content-Disposition'] = 'attachment; filename="reporte_acme.pdf"'
     return response
 
+
+from django.shortcuts import redirect, get_object_or_404
+from .models import Solicitud
+
+def finalizar_solicitud(request, pk):
+    solicitud = get_object_or_404(Solicitud, pk=pk)
+    solicitud.estado = "Finalizada"
+    solicitud.save()
+    return redirect('panel_admin')  # ← CORREGIDO
+
+
+def panel_director(request):
+    return render(request, "panel_director.html")
 
 
 # ============================

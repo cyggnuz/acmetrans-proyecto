@@ -27,5 +27,8 @@ urlpatterns = [
     path('reportes/resumen/', views.reporte_resumen, name='reporte_resumen'),
     path("reportes/pdf/", views.generar_resumen_pdf, name="generar_resumen_pdf"),
 
+    path('solicitud/<int:pk>/finalizar/', views.finalizar_solicitud, name='finalizar'),
+    path("panel-director/", views.panel_director, name="panel_director"),
+
 
 ]

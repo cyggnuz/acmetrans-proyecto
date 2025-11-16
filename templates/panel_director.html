@@ -45,11 +45,11 @@
   {% if solicitudes %}
   <div class="panel-columns">
 
-    <!-- OPERACIONES -->
+    <!--  OPERACIONES -->
     <div class="columna">
       <h3>Operaciones</h3>
       {% for s in solicitudes %}
-        {% if s.tipo_carga == "General" or s.tipo_carga == "Maquinaria Pesada" %}
+        {% if s.estado == "En proceso" %}
         <div class="card">
           <h4>{{ s.id_solicitud }}</h4>
           <p><b>Cliente:</b> {{ s.nombre_cliente }}</p>
@@ -59,19 +59,18 @@
 
           <div class="acciones">
             <a href="{% url 'simular_avance' s.pk %}" class="btn-azul">Simular</a>
-            <a href="{% url 'aprobar' s.pk %}" class="btn-verde">Aprobar</a>
-            <a href="{% url 'rechazar' s.pk %}" class="btn-rojo">Rechazar</a>
+            <a href="{% url 'finalizar' s.pk %}" class="btn-verde">Finalizar</a>
           </div>
         </div>
         {% endif %}
       {% endfor %}
     </div>
 
-    <!-- DIRECCIÓN -->
+    <!-- DIRECCIÓN GENERAL -->
     <div class="columna">
       <h3>Dirección General</h3>
       {% for s in solicitudes %}
-        {% if s.tipo_carga == "Peligrosa" or s.tipo_carga == "Granel" %}
+        {% if s.estado == "Pendiente" %}
         <div class="card">
           <h4>{{ s.id_solicitud }}</h4>
           <p><b>Cliente:</b> {{ s.nombre_cliente }}</p>
@@ -79,7 +78,6 @@
           <span class="estado {{ s.estado|lower|cut:" " }}">{{ s.estado }}</span>
 
           <div class="acciones">
-            <a href="{% url 'simular_avance' s.pk %}" class="btn-azul">Simular</a>
             <a href="{% url 'aprobar' s.pk %}" class="btn-verde">Aprobar</a>
             <a href="{% url 'rechazar' s.pk %}" class="btn-rojo">Rechazar</a>
           </div>
@@ -88,11 +86,11 @@
       {% endfor %}
     </div>
 
-    <!-- FINANZAS -->
+    <!-- 3️FINANZAS -->
     <div class="columna">
       <h3>Finanzas</h3>
       {% for s in solicitudes %}
-        {% if s.tipo_carga == "Refrigerada" %}
+        {% if s.estado == "Finalizada" %}
         <div class="card">
           <h4>{{ s.id_solicitud }}</h4>
           <p><b>Cliente:</b> {{ s.nombre_cliente }}</p>
@@ -100,11 +98,7 @@
 
           <span class="estado {{ s.estado|lower|cut:" " }}">{{ s.estado }}</span>
 
-          <div class="acciones">
-            <a href="{% url 'simular_avance' s.pk %}" class="btn-azul">Simular</a>
-            <a href="{% url 'aprobar' s.pk %}" class="btn-verde">Aprobar</a>
-            <a href="{% url 'rechazar' s.pk %}" class="btn-rojo">Rechazar</a>
-          </div>
+          <div class="acciones"></div>
         </div>
         {% endif %}
       {% endfor %}
