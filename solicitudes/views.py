@@ -7,11 +7,16 @@ from django.utils.html import strip_tags
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from weasyprint import HTML
-
 import random
+import base64
+from io import BytesIO
+import matplotlib.pyplot as plt
 from .models import Solicitud
 from .forms import SolicitudForm
 from django.contrib.auth import logout
+import matplotlib
+matplotlib.use('Agg')
+
 
 
 # ============================
@@ -29,7 +34,6 @@ TIPOS_CARGA_VALIDOS = ["General", "Refrigerada", "Peligrosa", "Maquinaria Pesada
 def get_sucursal(request):
     suc = request.GET.get("sucursal")
 
-    # Si elige "todas", no filtra nada
     if suc == "todas":
         request.session["sucursal_activa"] = None
         return None
@@ -99,13 +103,11 @@ def crear_solicitud(request):
         if form.is_valid():
             sol = form.save(commit=False)
 
-            # Validación sucursal
             suc = request.POST.get("sucursal")
             if suc not in SUCURSALES_VALIDAS:
                 suc = "Santiago"
             sol.sucursal = suc
 
-            # Sanitizar
             sol.indicaciones_especiales = strip_tags(sol.indicaciones_especiales or "")
             sol.estado = 'Pendiente'
             sol.save()
@@ -142,7 +144,7 @@ def panel_admin(request):
     solicitudes = (
         Solicitud.objects.filter(sucursal=sucursal_activa)
         if sucursal_activa else Solicitud.objects.all()
-    ).order_by("-fecha_creacion")    # ← CORREGIDO (eliminado [:5])
+    ).order_by("-fecha_creacion")
 
     total_solicitudes = solicitudes.count()
 
@@ -215,7 +217,7 @@ def panel_solicitudes(request):
 
 
 # ============================
-# DETALLE
+# DETALLE SOLICITUD
 # ============================
 
 @login_required
@@ -231,7 +233,7 @@ def detalle_solicitud(request, pk):
 
 
 # ============================
-# SIMULAR / APROBAR / RECHAZAR
+# SIMULAR, APROBAR, RECHAZAR
 # ============================
 
 @login_required
@@ -315,7 +317,7 @@ def panel_historial(request):
 
 
 # ============================
-# FORMULARIO PÚBLICo
+# FORMULARIO PÚBLICO
 # ============================
 
 def solicitud_cliente(request):
@@ -324,7 +326,6 @@ def solicitud_cliente(request):
         form = SolicitudForm(request.POST)
 
         if form.is_valid():
-
             sol = form.save(commit=False)
 
             suc = request.POST.get("sucursal")
@@ -366,10 +367,10 @@ def reportes(request):
 
     sucursal_activa = get_sucursal(request)
 
-    solicitudes = (
-        Solicitud.objects.filter(sucursal=sucursal_activa)
-        if sucursal_activa else Solicitud.objects.all()
-    )
+    if sucursal_activa in SUCURSALES_VALIDAS:
+        solicitudes = Solicitud.objects.filter(sucursal=sucursal_activa)
+    else:
+        solicitudes = Solicitud.objects.all()
 
     resumen = {
         "pendientes": solicitudes.filter(estado="Pendiente").count(),
@@ -380,55 +381,28 @@ def reportes(request):
 
     total_solicitudes = solicitudes.count()
 
+    # Gráfico áreas
+    area_operaciones = solicitudes.filter(estado="Pendiente").count()
+    area_direccion = solicitudes.filter(estado="En proceso").count()
+    area_finanzas = solicitudes.filter(estado__in=["Finalizada", "Rechazada"]).count()
+
+    grafico_areas = {
+        "labels": ["Operaciones", "Dirección", "Finanzas"],
+        "data": [area_operaciones, area_direccion, area_finanzas]
+    }
+
     return render(request, "reportes.html", {
         "resumen": resumen,
         "total_solicitudes": total_solicitudes,
         "active": "reportes",
-        "sucursal_activa": sucursal_activa
+        "sucursal_activa": sucursal_activa,
+        "grafico_areas": grafico_areas,
     })
 
 
-@login_required
-@user_passes_test(solo_director)
-def reporte_resumen(request):
-
-    sucursal_activa = request.session.get("sucursal_activa", "Santiago")
-    solicitudes = Solicitud.objects.filter(sucursal=sucursal_activa)
-
-    resumen = {
-        "pendientes": solicitudes.filter(estado="Pendiente").count(),
-        "en_proceso": solicitudes.filter(estado="En proceso").count(),
-        "finalizadas": solicitudes.filter(estado="Finalizada").count(),
-        "rechazadas": solicitudes.filter(estado="Rechazada").count(),
-    }
-
-    total = solicitudes.count()
-
-    return render(request, "reporte_resumen.html", {
-        "solicitudes": solicitudes,
-        "resumen": resumen,
-        "total": total,
-        "sucursal": sucursal_activa
-    })
-
-
-
-@login_required
-@user_passes_test(solo_director)
-def exportar_reporte_pdf(request):
-
-    return HttpResponse(
-        "<h2 style='font-family:sans-serif;'>❌ Generación de PDF no disponible en Windows.<br><br>"
-        "Se requiere instalar WeasyPrint + Cairo + Pango + GObject.</h2>",
-        content_type="text/html"
-    )
-    return response
-
-
-import pdfkit
-from django.template.loader import render_to_string
-from django.http import HttpResponse
-
+# ============================
+# REPORTE PDF
+# ============================
 
 @login_required
 @user_passes_test(solo_director)
@@ -437,6 +411,7 @@ def generar_resumen_pdf(request):
     sucursal_activa = request.session.get("sucursal_activa", "Santiago")
     solicitudes = Solicitud.objects.filter(sucursal=sucursal_activa)
 
+    # Resumen por estado
     resumen = {
         "pendientes": solicitudes.filter(estado="Pendiente").count(),
         "en_proceso": solicitudes.filter(estado="En proceso").count(),
@@ -446,18 +421,71 @@ def generar_resumen_pdf(request):
 
     total = solicitudes.count()
 
+    secciones = {
+        "Operaciones": resumen["pendientes"],
+        "Dirección": resumen["en_proceso"],
+        "Finanzas": resumen["finalizadas"] + resumen["rechazadas"],
+    }
+
+    # =============================
+    # GRÁFICO 1: DONUT (estados)
+    # =============================
+    import matplotlib.pyplot as plt
+    from io import BytesIO
+    import base64
+
+    def generar_grafico_donut():
+        fig, ax = plt.subplots(figsize=(4, 4))
+        labels = list(resumen.keys())
+        valores = list(resumen.values())
+        colores = ['#f1c40f', '#3498db', '#2ecc71', '#e74c3c']
+        ax.pie(valores, labels=labels, autopct='%1.1f%%', colors=colores)
+        ax.axis("equal")
+
+        buffer = BytesIO()
+        plt.savefig(buffer, format='png', bbox_inches='tight')
+        buffer.seek(0)
+        imagen = base64.b64encode(buffer.read()).decode()
+        plt.close()
+        return imagen
+
+    grafico_donut = generar_grafico_donut()
+
+    # =============================
+    # GRÁFICO 2: BARRAS (secciones)
+    # =============================
+    def generar_grafico_barras():
+        fig, ax = plt.subplots(figsize=(5, 4))
+
+        labels = list(secciones.keys())
+        valores = list(secciones.values())
+
+        ax.bar(labels, valores, color=['#9b59b6','#2980b9','#27ae60'])
+        ax.set_title("Solicitudes por Sección")
+        ax.set_ylabel("Cantidad")
+
+        buffer = BytesIO()
+        plt.savefig(buffer, format='png', bbox_inches='tight')
+        buffer.seek(0)
+        imagen = base64.b64encode(buffer.read()).decode()
+        plt.close()
+        return imagen
+
+    grafico_barras = generar_grafico_barras()
+
+    # Enviar a la plantilla
     context = {
         "solicitudes": solicitudes,
         "resumen": resumen,
+        "secciones": secciones,
         "total": total,
         "sucursal": sucursal_activa,
         "fecha": timezone.now().date(),
-        "grafico_donut": None,
-        "grafico_barras": None,
+        "grafico_donut": grafico_donut,
+        "grafico_barras": grafico_barras,
     }
 
     html_string = render_to_string("reporte_pdf.html", context)
-
     pdf = HTML(string=html_string, base_url=request.build_absolute_uri()).write_pdf()
 
     response = HttpResponse(pdf, content_type='application/pdf')
@@ -465,18 +493,18 @@ def generar_resumen_pdf(request):
     return response
 
 
-from django.shortcuts import redirect, get_object_or_404
-from .models import Solicitud
 
+# ============================
+# FINALIZAR SOLICITUD
+# ============================
+
+@login_required
+@user_passes_test(solo_director)
 def finalizar_solicitud(request, pk):
     solicitud = get_object_or_404(Solicitud, pk=pk)
     solicitud.estado = "Finalizada"
     solicitud.save()
-    return redirect('panel_admin')  # ← CORREGIDO
-
-
-def panel_director(request):
-    return render(request, "panel_director.html")
+    return redirect('panel_admin')
 
 
 # ============================

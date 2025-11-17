@@ -6,7 +6,6 @@
     <meta charset="UTF-8">
     <title>Reporte ACME TRANS</title>
 
-    <!-- Usa tu CSS general -->
     <link rel="stylesheet" href="{% static 'css/general.css' %}">
 </head>
 
@@ -48,7 +47,7 @@
         </p>
     </section>
 
-    <!-- Análisis -->
+    <!-- Rendimiento por Estado -->
     <section class="pdf-section">
         <h2>Rendimiento General</h2>
 
@@ -58,14 +57,24 @@
             <li>Finalizadas: {{ resumen.finalizadas }}</li>
             <li>Rechazadas: {{ resumen.rechazadas }}</li>
         </ul>
+    </section>
+
+    <section class="pdf-section">
+        <h2>Rendimiento por Sección</h2>
+
+        <ul>
+            <li>Operaciones: {{ secciones.Operaciones }}</li>
+            <li>Dirección: {{ secciones.Dirección }}</li>
+            <li>Finanzas: {{ secciones.Finanzas }}</li>
+        </ul>
 
         <p>
-            Se recomienda analizar las solicitudes pendientes para mejorar la gestión 
-            del área y evitar atrasos en la cadena operativa.
+            Esta comparación permite visualizar cómo se distribuye la carga 
+            de trabajo en cada área de la empresa.
         </p>
     </section>
 
-    <!-- Gráficos (si existen) -->
+    <!-- Gráficos -->
     <section class="pdf-section">
         <h2>Gráficos del Período</h2>
 
@@ -75,7 +84,7 @@
         {% endif %}
 
         {% if grafico_barras %}
-            <p><strong>Comparación por Estado:</strong></p>
+            <p><strong>Comparación por Sección:</strong></p>
             <img src="data:image/png;base64,{{ grafico_barras }}" style="width:300px;">
         {% endif %}
     </section>

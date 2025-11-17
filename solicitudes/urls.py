@@ -14,7 +14,6 @@ urlpatterns = [
     path('solicitudes/<int:pk>/aprobar/', views.aprobar, name='aprobar'),
     path('solicitudes/<int:pk>/rechazar/', views.rechazar, name='rechazar'),
 
-
     # RUTAS DEL PANEL ADMIN
     path('panel/', views.panel_admin, name='panel_admin'),
     path('inbox/', views.inbox, name='inbox'),
@@ -24,11 +23,11 @@ urlpatterns = [
     # Historial dentro del panel
     path('panel/historial/', views.panel_historial, name='historial'),
 
-    path('reportes/resumen/', views.reporte_resumen, name='reporte_resumen'),
+    # 🔥 RUTA CORRECTA PARA EL PDF
     path("reportes/pdf/", views.generar_resumen_pdf, name="generar_resumen_pdf"),
 
+    # Finalizar solicitud
     path('solicitud/<int:pk>/finalizar/', views.finalizar_solicitud, name='finalizar'),
-    path("panel-director/", views.panel_director, name="panel_director"),
 
-
+   
 ]
