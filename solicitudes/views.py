@@ -508,6 +508,27 @@ def finalizar_solicitud(request, pk):
     return redirect('panel_admin')
 
 
+# ============================ # MOTIVOS RECHAZO # ============================
+@login_required
+@user_passes_test(solo_director)
+def rechazar(request, pk):
+
+    s = get_object_or_404(Solicitud, pk=pk)
+
+    if request.method == "POST":
+        motivo = request.POST.get("motivo", "No especificado")
+
+        s.estado = 'Rechazada'
+        s.estado_final = 'Rechazada'
+        s.motivo_cierre = motivo
+        s.fecha_cierre = timezone.now().date()
+        s.save()
+
+        messages.warning(request, f"Solicitud {s.id_solicitud} rechazada.")
+        return redirect('solicitudes')
+
+    return redirect('solicitudes')
+
 # ============================
 # LOGOUT
 # ============================

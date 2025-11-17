@@ -1,0 +1,32 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Rechazar Solicitud</title>
+    <link rel="stylesheet" href="{% static 'css/general.css' %}">
+</head>
+<body class="fondo-admin">
+
+<div class="contenedor">
+    <h2>Rechazar Solicitud {{ solicitud.id_solicitud }}</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <label for="motivo">Motivo del rechazo:</label>
+        <select name="motivo" required class="input-form">
+            <option value="">Seleccione...</option>
+            {% for m in motivos %}
+            <option value="{{ m.0 }}">{{ m.1 }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="btn-rechazar">Confirmar Rechazo</button>
+        <a href="{% url 'solicitudes' %}" class="btn-secundario">Cancelar</a>
+    </form>
+
+</div>
+
+</body>
+</html>

@@ -129,3 +129,11 @@ class Solicitud(models.Model):
             self.sucursal = "Santiago"
 
         super().save(*args, **kwargs)
+
+MOTIVOS_RECHAZO = [
+    ("Precio no competitivo", "Precio no competitivo"),
+    ("Capacidad logística insuficiente", "Capacidad logística insuficiente"),
+    ("Documentación incompleta", "Documentación incompleta"),
+    ("Información inconsistente", "Información inconsistente"),
+    ("Ruta no disponible", "Ruta no disponible"),
+]

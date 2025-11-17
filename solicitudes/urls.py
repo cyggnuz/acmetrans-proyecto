@@ -14,6 +14,8 @@ urlpatterns = [
     path('solicitudes/<int:pk>/aprobar/', views.aprobar, name='aprobar'),
     path('solicitudes/<int:pk>/rechazar/', views.rechazar, name='rechazar'),
 
+
+
     # RUTAS DEL PANEL ADMIN
     path('panel/', views.panel_admin, name='panel_admin'),
     path('inbox/', views.inbox, name='inbox'),

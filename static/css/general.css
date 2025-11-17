@@ -1956,3 +1956,73 @@ body.fondo-admin {
     margin: 0 auto 10px auto;
 }
 
+/* =============================
+      MODAL PERSONALIZADO
+============================== */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.55);
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal-card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 380px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    animation: aparecer 0.25s ease;
+}
+
+@keyframes aparecer {
+    from { transform: scale(0.9); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+
+.modal-card h3 {
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.modal-card select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    margin-top: 6px;
+    margin-bottom: 20px;
+}
+
+/* BOTONES DEL MODAL */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-cancelar {
+    background: #ccc;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn-confirmar {
+    background: #d62828;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* BOTÓN RECHAZAR EN TABLA */
+.btn-rechazar {
+    margin-left: 4px;
+}

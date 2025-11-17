@@ -17,12 +17,10 @@
     <label><strong>Sucursal:</strong></label>
     <select name="sucursal" onchange="this.form.submit()">
 
-      <!-- 👉 OPCIÓN PARA VER TODAS -->
       <option value="todas" {% if sucursal_activa == None or sucursal_activa == "todas" %}selected{% endif %}>
         Todas
       </option>
 
-      <!-- 👉 LISTA REAL DE SUCURSALES -->
       {% for cod, nom in SUCURSALES %}
         <option value="{{ cod }}" {% if sucursal_activa == cod %}selected{% endif %}>
           {{ nom }}
@@ -63,7 +61,17 @@
         <td class="acciones">
           <a href="{% url 'simular_avance' s.id %}" class="btn-azul">Simular</a>
           <a href="{% url 'aprobar' s.id %}" class="btn-verde">Aprobar</a>
-          <a href="{% url 'rechazar' s.id %}" class="btn-rojo">Rechazar</a>
+
+          <!-- BOTÓN RECHAZAR CORREGIDO -->
+          <button 
+              type="button"
+              class="btn-rojo"
+              data-bs-toggle="modal"
+              data-bs-target="#modalRechazo"
+              onclick="abrirModalRechazo('{{ s.id }}')">
+              Rechazar
+          </button>
+
         </td>
       </tr>
       {% empty %}
@@ -74,5 +82,48 @@
     </tbody>
   </table>
 </div>
+
+<!-- ================================
+      MODAL DE RECHAZO
+================================ -->
+<div class="modal fade" id="modalRechazo" tabindex="-1" aria-labelledby="modalRechazoLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalRechazoLabel">Motivo de Rechazo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <form method="POST" id="formRechazo">
+        {% csrf_token %}
+        <div class="modal-body">
+          <label><strong>Seleccione el motivo:</strong></label>
+          <select name="motivo" class="form-control" required>
+            <option value="">-- Seleccione --</option>
+            <option value="Precio no competitivo"> Precio no competitivo</option>
+            <option value="Falta de disponibilidad"> Falta de disponibilidad</option>
+            <option value="Cliente rechazó la oferta"> Cliente rechazó la oferta</option>
+            <option value="Problemas de documentación"> Problemas de documentación</option>
+            <option value="Otro"> Otro</option>
+          </select>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger">Confirmar Rechazo</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function abrirModalRechazo(id) {
+    const form = document.getElementById("formRechazo");
+    form.action = `/solicitudes/${id}/rechazar/`;
+}
+</script>
 
 {% endblock %}
