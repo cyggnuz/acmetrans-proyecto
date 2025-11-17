@@ -489,7 +489,8 @@ def generar_resumen_pdf(request):
     pdf = HTML(string=html_string, base_url=request.build_absolute_uri()).write_pdf()
 
     response = HttpResponse(pdf, content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="reporte_acme.pdf"'
+    response['Content-Disposition'] = 'inline; filename="reporte_acme.pdf"'
+
     return response
 
 
