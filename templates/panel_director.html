@@ -45,9 +45,32 @@
   {% if solicitudes %}
   <div class="panel-columns">
 
-    <!--  OPERACIONES -->
+    <!-- 1) OPERACIONES -->
     <div class="columna">
       <h3>Operaciones</h3>
+
+      {% for s in solicitudes %}
+        {% if s.estado == "Pendiente" %}
+        <div class="card">
+          <h4>{{ s.id_solicitud }}</h4>
+          <p><b>Cliente:</b> {{ s.nombre_cliente }}</p>
+          <p><b>Sucursal:</b> {{ s.sucursal }}</p>
+
+          <span class="estado pendiente">{{ s.estado }}</span>
+
+          <div class="acciones">
+            <a href="{% url 'simular_avance' s.pk %}" class="btn-azul">Simular</a>
+          </div>
+        </div>
+        {% endif %}
+      {% endfor %}
+
+    </div>
+
+    <!-- 2) DIRECCIÓN GENERAL -->
+    <div class="columna">
+      <h3>Dirección General</h3>
+
       {% for s in solicitudes %}
         {% if s.estado == "En proceso" %}
         <div class="card">
@@ -55,27 +78,7 @@
           <p><b>Cliente:</b> {{ s.nombre_cliente }}</p>
           <p><b>Sucursal:</b> {{ s.sucursal }}</p>
 
-          <span class="estado {{ s.estado|lower|cut:" " }}">{{ s.estado }}</span>
-
-          <div class="acciones">
-            <a href="{% url 'simular_avance' s.pk %}" class="btn-azul">Simular</a>
-            <a href="{% url 'finalizar' s.pk %}" class="btn-verde">Finalizar</a>
-          </div>
-        </div>
-        {% endif %}
-      {% endfor %}
-    </div>
-
-    <!-- DIRECCIÓN GENERAL -->
-    <div class="columna">
-      <h3>Dirección General</h3>
-      {% for s in solicitudes %}
-        {% if s.estado == "Pendiente" %}
-        <div class="card">
-          <h4>{{ s.id_solicitud }}</h4>
-          <p><b>Cliente:</b> {{ s.nombre_cliente }}</p>
-          <p><b>Sucursal:</b> {{ s.sucursal }}</p>
-          <span class="estado {{ s.estado|lower|cut:" " }}">{{ s.estado }}</span>
+          <span class="estado enproceso">{{ s.estado }}</span>
 
           <div class="acciones">
             <a href="{% url 'aprobar' s.pk %}" class="btn-verde">Aprobar</a>
@@ -84,25 +87,33 @@
         </div>
         {% endif %}
       {% endfor %}
+
     </div>
 
-    <!-- 3️FINANZAS -->
-    <div class="columna">
-      <h3>Finanzas</h3>
-      {% for s in solicitudes %}
-        {% if s.estado == "Finalizada" %}
-        <div class="card">
-          <h4>{{ s.id_solicitud }}</h4>
-          <p><b>Cliente:</b> {{ s.nombre_cliente }}</p>
-          <p><b>Sucursal:</b> {{ s.sucursal }}</p>
+<!-- 3) FINANZAS -->
+<div class="columna">
+  <h3>Finanzas</h3>
 
-          <span class="estado {{ s.estado|lower|cut:" " }}">{{ s.estado }}</span>
+  <!-- Botón CLEAN -->
+  <div style="text-align:right; margin-bottom:10px;">
+    <a href="{% url 'clean_finanzas' %}" class="btn-rojo" style="padding:6px 12px; font-size:0.8rem;">
+      🧹 Clean
+    </a>
+  </div>
 
-          <div class="acciones"></div>
-        </div>
-        {% endif %}
-      {% endfor %}
+  {% for s in solicitudes %}
+    {% if s.estado == "Finalizada" %}
+    <div class="card">
+      <h4>{{ s.id_solicitud }}</h4>
+      <p><b>Cliente:</b> {{ s.nombre_cliente }}</p>
+      <p><b>Sucursal:</b> {{ s.sucursal }}</p>
+
+      <span class="estado finalizada">{{ s.estado }}</span>
     </div>
+    {% endif %}
+  {% endfor %}
+
+</div>
 
   </div>
   {% else %}

@@ -6,6 +6,7 @@
 
   <h2>📄 Detalle de la Solicitud {{ s.id_solicitud }}</h2>
 
+
   <h3>Datos del Cliente</h3>
   <ul>
       <li><b>Cliente:</b> {{ s.nombre_cliente }}</li>
@@ -13,6 +14,7 @@
       <li><b>Tipo de carga:</b> {{ s.tipo_carga }}</li>
       <li><b>Peso:</b> {{ s.peso_kg }} kg | <b>Volumen:</b> {{ s.volumen_m3 }} m³</li>
   </ul>
+
 
   <h3>Detalles del Transporte</h3>
   <ul>
@@ -22,8 +24,11 @@
   </ul>
 
   <h3>Simulación Operaciones / Finanzas</h3>
+
   {% if not s.recursos_necesarios %}
+
       <a class="btn" href="{% url 'simular_avance' s.pk %}">Simular datos técnicos</a>
+
   {% else %}
       <ul>
           <li><b>Recursos:</b> {{ s.recursos_necesarios }}</li>
@@ -36,11 +41,34 @@
       </ul>
   {% endif %}
 
-  {% if s.estado not in 'Finalizada,Rechazada' %}
-  <div class="botones-detalle">
-      <a class="btn btn-success" href="{% url 'aprobar' s.pk %}">✅ Confirmar</a>
-      <a class="btn btn-danger" href="{% url 'rechazar' s.pk %}">❌ Rechazar</a>
-  </div>
+
+
+  {% if s.estado == "En proceso" %}
+
+
+      <div class="botones-detalle">
+            <a class="btn btn-success" href="{% url 'continuar_direccion' s.pk %}">
+                ➡ Continuar a Dirección General
+          </a>
+
+          <a class="btn btn-secondary" href="{% url 'panel_admin' %}">
+              ⬅ Volver
+          </a>
+      </div>
+
+  {% elif s.estado == "Pendiente" %}
+
+
+      <div class="botones-detalle">
+          <a class="btn btn-success" href="{% url 'aprobar' s.pk %}">🟢 Confirmar</a>
+          <a class="btn btn-danger" href="{% url 'rechazar' s.pk %}">🔴 Rechazar</a>
+      </div>
+
+  {% endif %}
+
+
+  {% if s.estado == "Finalizada" or s.estado == "Rechazada" %}
+      <p style="margin-top:20px;color:gray;">Solicitud cerrada.</p>
   {% endif %}
 
 </div>

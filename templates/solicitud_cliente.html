@@ -15,93 +15,103 @@
     <img src="{% static 'css/img/logo-icon2.png' %}" alt="ACME TRANS" class="logo-form">
     <h2>Formulario para Solicitud</h2>
 
+    {% if messages %}
+      {% for message in messages %}
+        <div class="mensaje {{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
     <form method="post" class="formulario-solicitud" novalidate>
       {% csrf_token %}
 
       <div class="form-grid">
 
-        <!-- Fila 1 -->
         <div>
           <label for="id_nombre_cliente">Nombre de la empresa</label>
           {{ form.nombre_cliente }}
+          {{ form.nombre_cliente.errors }}
         </div>
+
         <div>
           <label for="id_rut_cliente">RUT de la empresa</label>
           {{ form.rut_cliente }}
+          {{ form.rut_cliente.errors }}
         </div>
 
-        <!-- Fila SUCURSAL  -->
         <div>
-          <label for="sucursal">Sucursal</label>
-          <select name="sucursal" id="sucursal" required>
-              <option value="">Seleccione una sucursal</option>
-              <option value="Santiago">Santiago</option>
-              <option value="Coquimbo">Coquimbo</option>
-              <option value="Osorno">Osorno</option>
-          </select>
+          <label for="id_sucursal">Sucursal</label>
+          {{ form.sucursal }}  
+          {{ form.sucursal.errors }}
         </div>
 
-        <!-- Fila 2 -->
+        <div>
+          <label for="id_correo">Correo electrónico</label>
+          {{ form.correo }}
+          {{ form.correo.errors }}
+        </div>
+
+        <div>
+          <label for="id_telefono">Teléfono</label>
+          {{ form.telefono }}
+          {{ form.telefono.errors }}
+        </div>
+
         <div>
           <label for="id_volumen_m2">Volumen (m²)</label>
           {{ form.volumen_m2 }}
+          {{ form.volumen_m2.errors }}
         </div>
 
-        <!-- Fila 3 -->
         <div>
           <label for="id_peso_valor">Peso</label>
           <div class="peso-grupo">
             {{ form.peso_valor }}
             {{ form.peso_unidad }}
           </div>
+          {{ form.peso_valor.errors }}
+          {{ form.peso_unidad.errors }}
         </div>
 
-        <!-- Fila 4 -->
         <div>
-          <label for="id_fecha_retiro">Fecha de retiro de la carga</label>
+          <label for="id_fecha_retiro">Fecha de retiro</label>
           {{ form.fecha_retiro }}
-        </div>
-        <div>
-          <label for="id_fecha_entrega">Fecha de entrega de la carga</label>
-          {{ form.fecha_entrega }}
+          {{ form.fecha_retiro.errors }}
         </div>
 
-        <!-- Fila 5 -->
+        <div>
+          <label for="id_fecha_entrega">Fecha de entrega</label>
+          {{ form.fecha_entrega }}
+          {{ form.fecha_entrega.errors }}
+        </div>
+
         <div>
           <label for="id_tipo_carga">Tipo de carga</label>
           {{ form.tipo_carga }}
+          {{ form.tipo_carga.errors }}
         </div>
+
         <div>
           <label for="id_direccion_retiro">Dirección de retiro</label>
           {{ form.direccion_retiro }}
+          {{ form.direccion_retiro.errors }}
         </div>
 
-        <!-- Fila 6 -->
-        <div>
-          <label for="id_indicaciones_especiales">Indicaciones especiales</label>
-          {{ form.indicaciones_especiales }}
-        </div>
         <div>
           <label for="id_direccion_entrega">Dirección de entrega</label>
           {{ form.direccion_entrega }}
+          {{ form.direccion_entrega.errors }}
+        </div>
+
+        <div style="grid-column: 1 / 3;">
+          <label for="id_indicaciones_especiales">Indicaciones especiales</label>
+          {{ form.indicaciones_especiales }}
         </div>
 
       </div>
 
-      <!-- Bloque de errores -->
-      {% if form.errors %}
-        <ul class="mensajes">
-          {% for field_name, field_errors in form.errors.items %}
-            {% for error in field_errors %}
-              <li class="error">{{ field_name|capfirst }}: {{ error }}</li>
-            {% endfor %}
-          {% endfor %}
-        </ul>
-      {% endif %}
-
       <div class="botones-form">
         <a href="{% url 'home' %}" class="btn-rojo">Cerrar</a>
-        <button type="submit" class="btn-azul">Siguiente</button>
+        <button type="submit" class="btn-azul">Enviar solicitud</button>
       </div>
 
     </form>

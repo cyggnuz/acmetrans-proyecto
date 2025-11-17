@@ -1,5 +1,8 @@
 from django.urls import path
 from . import views
+from django.urls import path
+from solicitudes.views import clean_finanzas
+
 
 urlpatterns = [
     # Página principal pública de clientes
@@ -31,5 +34,9 @@ urlpatterns = [
     # Finalizar solicitud
     path('solicitud/<int:pk>/finalizar/', views.finalizar_solicitud, name='finalizar'),
 
-   
+    path("volver-direccion/<int:pk>/", views.volver_direccion, name="volver_direccion"),
+    path("continuar-direccion/<int:pk>/", views.continuar_direccion, name="continuar_direccion"),
+    path("clean-finanzas/", clean_finanzas, name="clean_finanzas"),
+
+
 ]

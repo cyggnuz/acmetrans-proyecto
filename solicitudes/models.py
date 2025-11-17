@@ -71,6 +71,9 @@ class Solicitud(models.Model):
     nombre_cliente     = models.CharField(max_length=120)
     rut_cliente        = models.CharField(max_length=20)
 
+    correo             = models.CharField(max_length=120)
+    telefono           = models.CharField(max_length=20)
+
     volumen_m2         = models.FloatField(help_text="Volumen en metros cuadrados (m²)")
     peso_valor         = models.FloatField(help_text="Valor del peso según unidad seleccionada")
     peso_unidad        = models.CharField(max_length=3, choices=UNIDADES_PESO, default='kg')
@@ -85,7 +88,7 @@ class Solicitud(models.Model):
     indicaciones_especiales = models.TextField(blank=True, null=True)
 
     # Estado general
-    estado = models.CharField(max_length=20, choices=ESTADOS, default='Pendiente')
+    estado = models.CharField(max_length=40, choices=ESTADOS, default='Pendiente')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     # --- Simulación Operaciones / Finanzas ---

@@ -14,6 +14,10 @@ import matplotlib.pyplot as plt
 from .models import Solicitud
 from .forms import SolicitudForm
 from django.contrib.auth import logout
+from django.utils.html import strip_tags
+from .forms import SolicitudForm
+from django.contrib import messages
+from .models import SUCURSALES, TIPO_CARGA
 import matplotlib
 matplotlib.use('Agg')
 
@@ -92,36 +96,63 @@ def home_redirect(request):
 # ============================
 # SECRETARIA: CREAR SOLICITUD
 # ============================
-
 @login_required
 @user_passes_test(solo_secretaria)
 def crear_solicitud(request):
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = SolicitudForm(request.POST)
 
         if form.is_valid():
+
             sol = form.save(commit=False)
 
-            suc = request.POST.get("sucursal")
-            if suc not in SUCURSALES_VALIDAS:
-                suc = "Santiago"
-            sol.sucursal = suc
+            sucursal = request.POST.get("sucursal")
+            if not sucursal or sucursal not in dict(SUCURSALES):
+                messages.error(request, "Debe seleccionar una sucursal válida.")
+                return render(request, "formulario_solicitud.html", {
+                    "form": form,
+                    "active": "solicitudes"
+                })
+            sol.sucursal = sucursal
+
+
+            tipo = request.POST.get("tipo_carga")
+            if tipo not in dict(TIPO_CARGA):
+                form.add_error("tipo_carga", "Tipo de carga inválido.")
+                return render(request, "formulario_solicitud.html", {
+                    "form": form,
+                    "active": "solicitudes"
+                })
+            sol.tipo_carga = tipo
+
+
+            if sol.fecha_entrega < sol.fecha_retiro:
+                form.add_error("fecha_entrega", "La fecha de entrega no puede ser anterior a la fecha de retiro.")
+                return render(request, "formulario_solicitud.html", {
+                    "form": form,
+                    "active": "solicitudes"
+                })
+
 
             sol.indicaciones_especiales = strip_tags(sol.indicaciones_especiales or "")
-            sol.estado = 'Pendiente'
+
+            sol.estado = "Pendiente"
             sol.save()
 
-            messages.success(request, "Solicitud ingresada exitosamente.")
-            return render(request, 'solicitud_ok.html', {"solicitud": sol})
+            return render(request, "solicitud_ok.html", {"solicitud": sol})
 
-    else:
-        form = SolicitudForm()
+        return render(request, "formulario_solicitud.html", {
+            "form": form,
+            "active": "solicitudes"
+        })
 
-    return render(request, 'formulario_solicitud.html', {
+    form = SolicitudForm()
+    return render(request, "formulario_solicitud.html", {
         "form": form,
         "active": "solicitudes"
     })
+
 
 
 # ============================
@@ -144,7 +175,7 @@ def panel_admin(request):
     solicitudes = (
         Solicitud.objects.filter(sucursal=sucursal_activa)
         if sucursal_activa else Solicitud.objects.all()
-    ).order_by("-fecha_creacion")
+    ).exclude(estado="Rechazada").order_by("-fecha_creacion")
 
     total_solicitudes = solicitudes.count()
 
@@ -190,16 +221,17 @@ def panel_solicitudes(request):
 
     sucursal_activa = get_sucursal(request)
 
-    # 🔹 Filtrar por sucursal
     if sucursal_activa:
         solicitudes = Solicitud.objects.filter(sucursal=sucursal_activa)
     else:
         solicitudes = Solicitud.objects.all()
 
-    # 🔹 FILTRAR SOLO LAS PENDIENTES
-    solicitudes = solicitudes.filter(estado="Pendiente").order_by('-fecha_creacion')
+   
+    solicitudes = solicitudes.filter(
+        estado="En proceso"
+    ).order_by('-fecha_creacion')
 
-    # 🔹 Resumen (basado igual en la sucursal filtrada)
+    # Resumen
     todas = Solicitud.objects.filter(sucursal=sucursal_activa) if sucursal_activa else Solicitud.objects.all()
 
     resumen = {
@@ -325,41 +357,50 @@ def panel_historial(request):
 # FORMULARIO PÚBLICO
 # ============================
 
+
 def solicitud_cliente(request):
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = SolicitudForm(request.POST)
 
         if form.is_valid():
             sol = form.save(commit=False)
 
-            suc = request.POST.get("sucursal")
-            if suc not in SUCURSALES_VALIDAS:
-                suc = "Santiago"
-            sol.sucursal = suc
+            # Validar sucursal
+            sucursal = request.POST.get("sucursal")
+            if sucursal not in dict(SUCURSALES):
+                messages.error(request, "Debe seleccionar una sucursal válida.")
+                return render(request, "solicitud_cliente.html", {"form": form, "TIPO_CARGA": TIPO_CARGA})
 
-            tipo_post = request.POST.get("tipo_carga")
-            if tipo_post not in TIPOS_CARGA_VALIDOS:
-                tipo_post = "General"
-            sol.tipo_carga = tipo_post
+            sol.sucursal = sucursal
 
+            # Validar tipo de carga
+            tipo = request.POST.get("tipo_carga")
+            if tipo not in dict(TIPO_CARGA):
+                messages.error(request, "Debe seleccionar un tipo de carga válido.")
+                return render(request, "solicitud_cliente.html", {"form": form, "TIPO_CARGA": TIPO_CARGA})
+
+            sol.tipo_carga = tipo
+
+            # Validación de fechas
             if sol.fecha_entrega < sol.fecha_retiro:
-                messages.error(request, "La fecha de entrega no puede ser anterior a la fecha de retiro.")
-                return redirect("solicitud_cliente")
+                messages.error(request, "La fecha de entrega no puede ser anterior a la de retiro.")
+                return render(request, "solicitud_cliente.html", {"form": form, "TIPO_CARGA": TIPO_CARGA})
 
             sol.indicaciones_especiales = strip_tags(sol.indicaciones_especiales or "")
-            sol.estado = 'Pendiente'
-            sol.id_solicitud = f"S{random.randint(10000,99999)}"
+            sol.estado = "Pendiente"
 
             sol.save()
 
-            messages.success(request, "Solicitud enviada.")
-            return render(request, 'solicitud_ok.html', {"solicitud": sol})
+            return render(request, "solicitud_ok.html", {"solicitud": sol})
 
-    else:
-        form = SolicitudForm()
+        # Form con errores de Django
+        return render(request, "solicitud_cliente.html", {"form": form, "TIPO_CARGA": TIPO_CARGA})
 
-    return render(request, 'solicitud_cliente.html', {"form": form})
+    # GET
+    form = SolicitudForm()
+    return render(request, "solicitud_cliente.html", {"form": form, "TIPO_CARGA": TIPO_CARGA})
+
 
 
 # ============================
@@ -533,6 +574,54 @@ def rechazar(request, pk):
         return redirect('solicitudes')
 
     return redirect('solicitudes')
+
+
+@login_required
+@user_passes_test(solo_director)
+def volver_direccion(request, pk):
+    s = get_object_or_404(Solicitud, pk=pk)
+
+    return redirect('panel_admin')
+
+
+@login_required
+@user_passes_test(solo_director)
+def continuar_direccion(request, pk):
+    s = get_object_or_404(Solicitud, pk=pk)
+
+    s.estado = "En proceso"
+    s.save()
+
+    return redirect('panel_admin')
+
+
+# ============================
+# limpiar finanzas
+# ============================
+
+@login_required
+@user_passes_test(solo_director)
+def clean_finanzas(request):
+
+
+    solicitudes = Solicitud.objects.filter(estado__in=["En proceso", "Finalizada"])
+
+    for s in solicitudes:
+        s.recursos_necesarios = ""
+        s.tiempo_viaje_estimado = ""
+        s.costo_combustible_clp = None
+        s.costo_personal_clp = None
+        s.costo_peajes_clp = None
+        s.permisos_especiales_clp = None
+        s.riesgo_logistico = ""
+        s.accion_pendiente = ""
+        s.estado = "Pendiente"
+        s.save()
+
+    messages.success(request, "Se limpiaron las simulaciones de Finanzas y se restablecieron las solicitudes.")
+    return redirect('panel_admin')
+
+
 
 # ============================
 # LOGOUT
