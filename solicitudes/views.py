@@ -190,18 +190,23 @@ def panel_solicitudes(request):
 
     sucursal_activa = get_sucursal(request)
 
+    # 🔹 Filtrar por sucursal
     if sucursal_activa:
         solicitudes = Solicitud.objects.filter(sucursal=sucursal_activa)
     else:
         solicitudes = Solicitud.objects.all()
 
-    solicitudes = solicitudes.order_by('-fecha_creacion')
+    # 🔹 FILTRAR SOLO LAS PENDIENTES
+    solicitudes = solicitudes.filter(estado="Pendiente").order_by('-fecha_creacion')
+
+    # 🔹 Resumen (basado igual en la sucursal filtrada)
+    todas = Solicitud.objects.filter(sucursal=sucursal_activa) if sucursal_activa else Solicitud.objects.all()
 
     resumen = {
-        'pendientes': solicitudes.filter(estado='Pendiente').count(),
-        'proceso': solicitudes.filter(estado='En proceso').count(),
-        'finalizadas': solicitudes.filter(estado='Finalizada').count(),
-        'rechazadas': solicitudes.filter(estado='Rechazada').count(),
+        'pendientes': todas.filter(estado='Pendiente').count(),
+        'proceso': todas.filter(estado='En proceso').count(),
+        'finalizadas': todas.filter(estado='Finalizada').count(),
+        'rechazadas': todas.filter(estado='Rechazada').count(),
     }
 
     total_solicitudes = solicitudes.count()
@@ -274,7 +279,7 @@ def aprobar(request, pk):
     s.save()
 
     messages.success(request, f"Solicitud {s.id_solicitud} aceptada.")
-    return redirect('historial')
+    return redirect('solicitudes')
 
 
 @login_required
@@ -289,7 +294,7 @@ def rechazar(request, pk):
     s.save()
 
     messages.warning(request, f"Solicitud {s.id_solicitud} rechazada.")
-    return redirect('historial')
+    return redirect('rechazar')
 
 
 # ============================
